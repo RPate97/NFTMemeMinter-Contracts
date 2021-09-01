@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/NFTMemeMachine.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> NFTMemeMachine.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">88.41% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>61/69</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>12/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">75% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>21/28</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">88.41% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>61/69</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">31×</span>
+<span class="cline-any cline-yes">31×</span>
+<span class="cline-any cline-yes">58×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">31×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.2;
+&nbsp;
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./ERC2981ContractWideRoyalties.sol";
+&nbsp;
+contract NFTMemeMachine is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties {
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+    CountersUpgradeable.Counter private _tokenIdCounter;
+    using SafeMath for uint256;
+&nbsp;
+    uint cooldownTime;
+    uint votingCooldownTime;
+&nbsp;
+    // events
+    event NewMeme(bytes32 memeHash, address owner, uint tokenId);
+    event BurnedMeme(uint memeHash, address owner, uint tokenId);
+    event UpdatedCooldownTime(uint cooldownTime, string cooldownType);
+    event UpdatedVotingPrice(uint price);
+&nbsp;
+    // mapping: memeId -&gt; memeHash
+    mapping (uint =&gt; bytes32) private memeToHash;
+    // mapping: hash -&gt; memeId
+    mapping (bytes32 =&gt; uint) private hashToMeme;
+    // mapping: memeId -&gt; imgHash (allows checking to see if the original image matches the img in ipfs)
+    mapping (uint =&gt; bytes32) private memeToImgHash;
+    // mapping: imgHash -&gt; memeId (allows requiring original img hashes)
+    mapping (bytes32 =&gt; uint) private imgHashToMeme;
+    // mapping: user address -&gt; cooldown time (allows requiring 5 minute cooldown)
+    mapping (address =&gt; uint) private userCooldown;
+    // whitelisted uri mapping: uri -&gt; memeHash
+    mapping (string =&gt; bytes32) private whitelist;
+    // mapping: user address -&gt; voting cooldown time
+    mapping (address =&gt; uint) private votingCooldown;
+    // mapping: memeId -&gt; vote score
+    mapping (uint =&gt; uint) private memeScore;
+&nbsp;
+    // update cooldown time
+    function updateCreationCooldownTime(uint _newCooldownTime) public onlyOwner {
+        cooldownTime = _newCooldownTime;
+        emit UpdatedCooldownTime(cooldownTime, "creation");
+    }
+&nbsp;
+    // updating voting cooldown time
+    function updateVotingCooldownTime(uint _newCooldowntime) public onlyOwner {
+        votingCooldownTime = _newCooldowntime;
+        emit UpdatedCooldownTime(cooldownTime, "voting");
+    }
+&nbsp;
+    // hashes the content of a meme
+    function _hashContent(uint32 _templateId, string[] memory text) internal pure returns (bytes32) {
+        string memory textStr = "";
+        for (uint i = 0; i &lt; text.length; i++) {
+            textStr = string(abi.encodePacked(textStr, text[i]));
+        }
+        return keccak256(abi.encode(_templateId, textStr));
+    }
+&nbsp;
+    // add a whitelisted meme uri
+    function addWhitelistedMemeURI(string memory _uri, uint32 _templateId, string[] memory _text) public onlyOwner {
+        whitelist[_uri] = _hashContent(_templateId, _text);
+    }
+&nbsp;
+    // check if a meme is original (for public use to avoid gas fees trying unoriginal memes)
+    function isOriginalMeme(uint32 _templateId, string[] memory _text) public view returns (bool, uint) {
+        uint memeId = hashToMeme[_hashContent(_templateId, _text)];
+        return (memeId == 0, memeId);
+    }
+&nbsp;
+    // verifies that the ipfs image is the original
+    // compares the memeImgHash with the passed in imgHash and returns result
+    function verifyOriginalImage(uint tokenId, bytes32 imgHash) public view returns (bool) {
+        return memeToImgHash[tokenId] == imgHash;
+    }
+&nbsp;
+    // creates a new meme
+    function createMeme(uint32 _templateId, string[] memory _text, bytes32 imgHash, string memory _uri) public {
+        // require 10 minute cooldown has passed 
+        require(block.timestamp &gt;= userCooldown[msg.sender], "cooldown error");
+        // get meme hash
+        bytes32 memeHash = _hashContent(_templateId, _text);
+        // require unique meme hash
+        require(hashToMeme[memeHash] == 0, "not unique error");
+        // require uri whitelisted
+        require(whitelist[_uri] == memeHash, "not whitelisted error");
+        // require img hash is unique
+        require(imgHashToMeme[imgHash] == 0, "not unique img error");
+        uint newTokenId = _tokenIdCounter.current();
+        // set memeid to hash
+        memeToHash[newTokenId] = memeHash;
+        // map hash to memeid
+        hashToMeme[memeHash] = newTokenId;
+        // map memeid to image hash
+        memeToImgHash[newTokenId] = imgHash;
+        // map imgHash to memeId
+        imgHashToMeme[imgHash] = newTokenId;
+        // update sender cooldown
+        userCooldown[msg.sender] = block.timestamp + cooldownTime;
+        // map score
+        memeScore[newTokenId] = 1;
+        // safemint
+        safeMint(msg.sender);
+        // set token uri
+        _setTokenURI(newTokenId, _uri);
+        // remove whitelisted uri
+        whitelist[_uri] = 0;
+        // emit event
+        emit NewMeme(memeHash, msg.sender, newTokenId);
+    }
+&nbsp;
+    // payable function to vote on a meme (payable to avoid people constantly upvoting their own memes)
+    function voteOnMeme(uint _memeId, bool upDown) public payable {
+        require(block.timestamp &gt;= votingCooldown[msg.sender], "voting cooldown error");
+        if (upDown) {
+            memeScore[_memeId] = memeScore[_memeId].add(1);
+        } else {
+            memeScore[_memeId] = memeScore[_memeId].sub(1);
+        }
+        votingCooldown[msg.sender] = block.timestamp + votingCooldownTime;
+    }
+&nbsp;
+    // withdraw vote payments
+<span class="fstat-no" title="function not covered" >    function withdraw() external onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        address _owner = owner();</span>
+<span class="cstat-no" title="statement not covered" >        payable(_owner).transfer(address(this).balance)</span>;
+    }
+&nbsp;
+    // update royalty value
+    function updateRoyalties(address _recipient, uint _royalties) public onlyOwner {
+        _setRoyalties(_recipient, _royalties);
+    }
+&nbsp;
+    // getters
+    // get creation cooldown
+    function getCreationCooldownTime() public view returns (uint) {
+        return cooldownTime;
+    }
+&nbsp;
+    // get users vote cooldown time (for public use to avoid gas fees trying to vote on memes before cooldown is up)
+<span class="fstat-no" title="function not covered" >    function getVoteCooldownTime() public view returns (uint) {</span>
+<span class="cstat-no" title="statement not covered" >        return votingCooldown[msg.sender];</span>
+    }
+&nbsp;
+    // get users creation cooldown time (for public use to avoid gas fees trying to make memes before cooldown is up)
+<span class="fstat-no" title="function not covered" >    function getCooldownTime() public view returns (uint) {</span>
+<span class="cstat-no" title="statement not covered" >        return userCooldown[msg.sender];</span>
+    }
+    
+    // gets a tokenId with the template + text hash
+    function getMemeWithHash(bytes32 _memeHash) public view returns (string memory, uint) {
+        uint memeId = hashToMeme[_memeHash];
+        return (tokenURI(memeId), memeId);
+    }
+&nbsp;
+    // gets a meme with the image hash
+    function getMemeWithImageHash(bytes32 _imgHash) public view returns (string memory, uint) {
+        uint memeId = imgHashToMeme[_imgHash];
+        return (tokenURI(memeId), memeId);
+    }
+&nbsp;
+    // gets a meme template + text hash with token id
+    function getMemeHash(uint _tokenId) public view returns (bytes32) {
+        return memeToHash[_tokenId];
+    }
+&nbsp;
+    // gets a meme template + text hash with token id
+    function getMemeImgHash(uint _tokenId) public view returns (bytes32) {
+        return memeToImgHash[_tokenId];
+    }
+&nbsp;
+    // gets a meme template + text hash with token id
+    function getMemeScore(uint _tokenId) public view returns (uint) {
+        return memeScore[_tokenId];
+    }
+&nbsp;
+    // gets all meme onchain metadata
+    function getMeme(uint _memeId) public view returns (bytes32, bytes32, uint, string memory) {
+        bytes32 memeHash = getMemeHash(_memeId);
+        bytes32 imgHash = getMemeImgHash(_memeId);
+        uint score = getMemeScore(_memeId);
+        string memory uri = tokenURI(_memeId);
+        return (memeHash, imgHash, score, uri);
+    }
+&nbsp;
+    function customInitialize() internal {
+        cooldownTime = 5 minutes;
+        votingCooldownTime = 10 seconds;
+        _setRoyalties(0xC6f9519F8e2C2be0bB29A585A894912Ccea62Dc8, 1000);
+        _tokenIdCounter.increment();
+    }
+&nbsp;
+    function initialize() initializer public {
+        __ERC721_init("NFTMemeMachine", "MEME");
+        __ERC721URIStorage_init();
+        __Pausable_init();
+        __Ownable_init();
+        __ERC721Burnable_init();
+        customInitialize();
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function pause() public onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        _pause()</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function unpause() public onlyOwner {</span>
+<span class="cstat-no" title="statement not covered" >        _unpause()</span>;
+    }
+&nbsp;
+    function safeMint(address to) public onlyOwner {
+        _safeMint(to, _tokenIdCounter.current());
+        _tokenIdCounter.increment();
+    }
+&nbsp;
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
+        internal
+        whenNotPaused
+        override
+    {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+&nbsp;
+    // The following functions are overrides required by Solidity.
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function _burn(uint256 tokenId)</span>
+        internal
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+    {
+<span class="cstat-no" title="statement not covered" >        super._burn(tokenId)</span>;
+    }
+&nbsp;
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC2981ContractWideRoyalties, ERC721Upgradeable) returns (bool) {</span>
+<span class="cstat-no" title="statement not covered" >        return super.supportsInterface(interfaceId);</span>
+    }
+}</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Mon Aug 30 2021 15:29:03 GMT-0700 (Pacific Daylight Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

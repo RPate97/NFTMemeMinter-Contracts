@@ -1,0 +1,24 @@
+{
+    "name": "The Very First Meme Minted with NFTMemeMachine", 
+    "description": "This is the original meme.", 
+    "image": "https://gateway.pinata.cloud/ipfs/QmWQLKpFvuot3K43SbWvMoKdZ34vVTPKrgRmZTdVTLqrqo",
+    "attributes": [
+        {
+            "trait_type": "Creator", 
+            "value": "Pate"
+        }, 
+        {
+            "trait_type": "Print Number", 
+            "value": 1
+        }, 
+        {
+            "display_type": "date", 
+            "trait_type": "creation date", 
+            "value": 1630370139
+        },
+        {
+            "trait_type": "Total Minted",
+            "value": 1
+        }
+    ]
+}
