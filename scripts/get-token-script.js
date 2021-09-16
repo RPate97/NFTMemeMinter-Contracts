@@ -1,8 +1,8 @@
 const hre = require("hardhat");
 
 async function main() {
-  const NFT = await hre.ethers.getContractFactory("NFTMemeMachine");
-  const CONTRACT_ADDRESS = "0x0DEBb5c9A8F81a3e16907062D7A535F9F24C7FAd"
+  const NFT = await hre.ethers.getContractFactory("MemeMinter");
+  const CONTRACT_ADDRESS = "0xcf3A926931a32BaeC3f0af21814EAE3D1a0AEAa1"
   const contract = NFT.attach(CONTRACT_ADDRESS);
 
   const owner = await contract.ownerOf(1);

@@ -1,10 +1,10 @@
 const { ethers, upgrades } = require('hardhat');
 
 async function main () {
-  const NFTMemeMachine = await ethers.getContractFactory('NFTMemeMachine');
-  console.log('Upgrading MemeMachine...');
-  await upgrades.upgradeProxy('0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0', NFTMemeMachine);
-  console.log('MemeMachine upgraded');
+  const MemeMinterV2 = await ethers.getContractFactory('MemeMinterV2');
+  console.log('Upgrading to MemeMinterV2...');
+  await upgrades.upgradeProxy('0xcf3A926931a32BaeC3f0af21814EAE3D1a0AEAa1', MemeMinterV2);
+  console.log('MemeMinterV2 upgraded');
 }
 
 main().then(() => process.exit(0)).catch(error => {

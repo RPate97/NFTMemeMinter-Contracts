@@ -8,12 +8,55 @@ const { expect } = require('chai');
  
 let NFTMemeMachine;
 let memeMachine;
- 
+
 // Start test block
-describe('NFTMemeMachine (proxy)', function () {
+describe('MemeMinter (proxy)', function () {
   beforeEach(async function () {
-    NFTMemeMachine = await ethers.getContractFactory("NFTMemeMachine");
-    memeMachine = await upgrades.deployProxy(NFTMemeMachine, [], {initializer: 'initialize'});
+    MemeMinter = await ethers.getContractFactory("MemeMinter");
+    memeMachine = await upgrades.deployProxy(MemeMinter, [], {initializer: 'initialize'});
+  });
+
+  it('Upgradability works', async () => {
+    const MemeMinterV2 = await ethers.getContractFactory("MemeMinterV2");
+    upgraded = await upgrades.upgradeProxy(memeMachine.address, MemeMinterV2);
+
+    // meme info
+    const templateId = 0;
+    const text = ["some text", "some more text"];
+    const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
+    const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // calculate uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
+    // whitelist uri
+    await upgraded.addWhitelistedMemeURI(hURI, hash);
+    // create meme
+    await upgraded.createMeme(templateId, text, imgHash, URI);
+    // get info
+    const res = await upgraded.getMeme(1);
+    const memeHash = res[0];
+    const memeImgHash = res[1];
+    const memeScore = res[2];
+    const memeUri = res[3];
+    // expect correct info
+    expect(memeHash).to.equal(hash, "meme hash is not correct");
+    expect(memeImgHash).to.equal(imgHash, "img hash is not correct");
+    expect(memeScore).to.equal(1, "score is not correct");
+    expect(memeUri).to.equal(memeUri, "uri is not correct");
+    // verify memeId returned with hash
+    const res2 = await upgraded.getMemeWithHash(hash);
+    expect(res2[0]).to.equal(URI);
+    expect(res2[1]).to.equal(1);
   });
  
   it('Whitelist URI, mint a token, expect correct URI and correct hash, expect memeId to be returned using hash', async function () {
@@ -23,7 +66,7 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
 
-    // calculate hash
+    // calculate meme hash
     var textStr = "";
     for (var i = 0; i < text.length; i++) {
         textStr += text[i];
@@ -31,8 +74,12 @@ describe('NFTMemeMachine (proxy)', function () {
     const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
     const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
 
+    // calculate uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // get info
@@ -60,9 +107,23 @@ describe('NFTMemeMachine (proxy)', function () {
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
     const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
 
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // calculate uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    const encodedURI2 = web3.eth.abi.encodeParameters(['string'], [URI2]);
+    const hURI2 = web3.utils.sha3(encodedURI2, {encoding: 'hex'});
+
     // whitelist uris
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
-    await memeMachine.addWhitelistedMemeURI(URI2, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
+    await memeMachine.addWhitelistedMemeURI(hURI2, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // create another meme and expect revert
@@ -89,9 +150,24 @@ describe('NFTMemeMachine (proxy)', function () {
     const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
     // update cooldown
     await memeMachine.updateCreationCooldownTime(0);
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+    
+    // calculate uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    const encodedURI2 = web3.eth.abi.encodeParameters(['string'], [URI2]);
+    const hURI2 = web3.utils.sha3(encodedURI2, {encoding: 'hex'});
+
     // whitelist uris
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
-    await memeMachine.addWhitelistedMemeURI(URI2, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
+    await memeMachine.addWhitelistedMemeURI(hURI2, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // create another meme and expect revert
@@ -105,10 +181,23 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
     const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // hash uri
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
     // update cooldown
     await memeMachine.updateCreationCooldownTime(0);
     // whitelist uris
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // create another meme and expect revert
@@ -122,15 +211,74 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
     const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+    // calculate meme hash2
+    const encoded2 = web3.eth.abi.encodeParameters(['uint256', 'string'], [1, "some unique text"])
+    const hash2 = web3.utils.sha3(encoded2, {encoding: 'hex'});
+    
+    // make uri hashes
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    const encodedURI2 = web3.eth.abi.encodeParameters(['string'], [URI2]);
+    const hURI2 = web3.utils.sha3(encodedURI2, {encoding: 'hex'});
+
     // update cooldown
     await memeMachine.updateCreationCooldownTime(0);
     // whitelist uris
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
-    await memeMachine.addWhitelistedMemeURI(URI2, 1, ["some unique text"]);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
+    await memeMachine.addWhitelistedMemeURI(hURI2, hash2);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // create another meme and expect revert
     await expect(memeMachine.createMeme(1, ["some unique text"], imgHash, URI2)).to.be.revertedWith("not unique img error");
+  });
+
+  it('Whitelist two URIs, mint token, update creation cooldown, mint another token, expect both tokens returned with getUsersMemes', async function () {
+    // meme info
+    const templateId = 0;
+    const text = ["some text", "some more text"];
+    const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
+    const imgHash2 = ethers.utils.hexZeroPad(web3.utils.asciiToHex("123456"), 32);
+    const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
+    const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+    // calculate meme hash2
+    const encoded2 = web3.eth.abi.encodeParameters(['uint256', 'string'], [1, "some unique text"])
+    const hash2 = web3.utils.sha3(encoded2, {encoding: 'hex'});
+    
+    // make uri hashes
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    const encodedURI2 = web3.eth.abi.encodeParameters(['string'], [URI2]);
+    const hURI2 = web3.utils.sha3(encodedURI2, {encoding: 'hex'});
+
+    // update cooldown
+    await memeMachine.updateCreationCooldownTime(0);
+    // whitelist uris
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
+    await memeMachine.addWhitelistedMemeURI(hURI2, hash2);
+    // create meme
+    await memeMachine.createMeme(templateId, text, imgHash, URI);
+    // create another meme and expect revert
+    await memeMachine.createMeme(1, ["some unique text"], imgHash2, URI2);
+    // get users memes
+    const res = await memeMachine.getUsersMemes();
+    expect(res[0]).to.equal(1);
+    expect(res[1]).to.equal(2);
   });
 
   it('Update creation cooldown time, expect correct cooldown time', async function() {
@@ -147,8 +295,20 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
 
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // vote on meme
@@ -164,8 +324,20 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
 
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+    
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // vote on meme
@@ -180,8 +352,21 @@ describe('NFTMemeMachine (proxy)', function () {
     const text = ["some text", "some more text"];
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+    
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // vote on meme
@@ -198,9 +383,21 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
 
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    
     await memeMachine.updateVotingCooldownTime(0);
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // vote on meme
@@ -237,8 +434,20 @@ describe('NFTMemeMachine (proxy)', function () {
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
 
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+    
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // check if same meme is original
@@ -256,8 +465,21 @@ describe('NFTMemeMachine (proxy)', function () {
     const text = ["some text", "some more text"];
     const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
     // whitelist uri
-    await memeMachine.addWhitelistedMemeURI(URI, templateId, text);
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
     // create meme
     await memeMachine.createMeme(templateId, text, imgHash, URI);
     // verify original img hash
@@ -272,7 +494,36 @@ describe('NFTMemeMachine (proxy)', function () {
     expect(res3[1]).to.equal(1);
   });
 
-//   it('Mint none unique  token, expect revert with not unique error', async function() {
+  it('Mint meme, add posting to meme, add another posting to meme, remove posting 1 from meme, expect posting 2 uri to resolve correctly', async function() {
+    const templateId = 0;
+    const text = ["some text", "some more text"];
+    const imgHash = ethers.utils.hexZeroPad(web3.utils.asciiToHex("12345"), 32);
+    const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
 
-//   });
+    const postingOne = "abcd";
+    const postingTwo = "abcdefg";
+
+    // calculate meme hash
+    var textStr = "";
+    for (var i = 0; i < text.length; i++) {
+        textStr += text[i];
+    }
+    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+
+    // make uri hash
+    const encodedURI = web3.eth.abi.encodeParameters(['string'], [URI]);
+    const hURI = web3.utils.sha3(encodedURI, {encoding: 'hex'});
+
+    // whitelist uri
+    await memeMachine.addWhitelistedMemeURI(hURI, hash);
+    // create meme
+    await memeMachine.createMeme(templateId, text, imgHash, URI);
+    // add posting to meme
+    await memeMachine.addPosting(1, postingOne);
+    await memeMachine.addPosting(1, postingTwo);
+    await memeMachine.removePosting(1, 0);
+    const res = await memeMachine.getMeme(1);
+    expect(res[4][0]).to.equal(postingTwo);
+  });
 });

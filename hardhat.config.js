@@ -31,7 +31,7 @@ module.exports = {
     matic: {
       url: "https://matic-mumbai.chainstacklabs.com",
       accounts: [PRIVATE_KEY],
-      gasPrice: 8000000000, 
+      gasPrice: "auto", 
     }
   },
   solidity: {

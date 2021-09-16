@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ERC2981ContractWideRoyalties.sol";
 
-contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties {
+contract MemeMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
     using SafeMath for uint256;
@@ -49,6 +49,9 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     mapping (uint => address) private memeStash;
     // mapping: memeId -> posting uris
     mapping (uint => string[]) private memePostings;
+
+    // upgradability test uint
+    uint testUpgrade;
 
     // update cooldown time
     function updateCreationCooldownTime(uint _newCooldownTime) public onlyOwner {
