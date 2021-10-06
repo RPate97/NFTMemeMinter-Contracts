@@ -3,6 +3,7 @@ require("@nomiclabs/hardhat-ethers");
 require('@openzeppelin/hardhat-upgrades');
 require("solidity-coverage");
 require("hardhat-gas-reporter");
+require('hardhat-abi-exporter');
 require('dotenv').config();
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
@@ -56,5 +57,12 @@ module.exports = {
     currency: 'USD',
     gasPrice: 15,
     enabled: true,
+  },
+  abiExporter: {
+    path: './data/abi',
+    clear: true,
+    flat: true,
+    only: [],
+    spacing: 2
   }
 }
