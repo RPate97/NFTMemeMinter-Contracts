@@ -3,7 +3,7 @@ var Web3 = require('web3');
 var web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
 
 async function main() {
-  const NFT = await hre.ethers.getContractFactory("MemeMinterV2");
+  const NFT = await hre.ethers.getContractFactory("DankMinter");
   const CONTRACT_ADDRESS = "0xcf3A926931a32BaeC3f0af21814EAE3D1a0AEAa1";
   const memeMachine = NFT.attach(CONTRACT_ADDRESS);
 

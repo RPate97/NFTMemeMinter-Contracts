@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ERC2981ContractWideRoyalties.sol";
 
-contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties {
+contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
     using SafeMath for uint256;
@@ -35,14 +35,6 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     mapping (bytes32 => uint) private imgHashToMeme;
     // mapping: user address -> cooldown time (allows requiring 5 minute cooldown)
     mapping (address => uint) private userCooldown;
-
-    // removed - whitelist
-    // // whitelisted uri mapping: uri -> memeHash
-    // mapping (bytes32 => bytes32) private whitelist;
-    // // whitelisted uri mapping: uri -> tokenId
-    // mapping (bytes32 => uint) private whitelistTokenIds;
-
-
     // mapping: user address -> voting cooldown time
     mapping (address => uint) private votingCooldown;
     // mapping: memeId -> vote score
@@ -75,14 +67,6 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         return keccak256(abi.encode(_templateId, textStr));
     }
 
-    // removed - whitelist
-    // // add a whitelisted meme uri
-    // function addWhitelistedMemeURI(bytes32 hURI, bytes32 memeHash) public onlyOwner {
-    //     whitelist[hURI] = memeHash;
-    //     whitelistTokenIds[hURI] = _tokenIdCounter.current();
-    //     _tokenIdCounter.increment();
-    // }
-
     // check if a meme is original (for public use to avoid gas fees trying unoriginal memes)
     function isOriginalMeme(uint32 _templateId, string[] memory _text) public view returns (bool, uint) {
         uint memeId = hashToMeme[_hashContent(_templateId, _text)];
@@ -103,18 +87,10 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         bytes32 memeHash = _hashContent(_templateId, _text);
         // require unique meme hash
         require(hashToMeme[memeHash] == 0, "not unique error");
-
-        // removed - whitelist
-        // get uri hash
-        // bytes32 hURI = keccak256(abi.encode(_uri));
-        // // require uri whitelisted
-        // require(whitelist[hURI] == memeHash, "not whitelisted error");
-        // // require img hash is unique
-        // require(imgHashToMeme[imgHash] == 0, "not unique img error");
-        // // get token id based on uri hash
-        // uint newTokenId = whitelistTokenIds[hURI];
+        // require img hash is unique
+        require(imgHashToMeme[imgHash] == 0, "not unique img error");
+        // get new token id
         uint newTokenId = _tokenIdCounter.current();
-
         // set memeid to hash
         memeToHash[newTokenId] = memeHash;
         // map hash to memeid
@@ -135,14 +111,6 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         safeMint(mintToAddress, newTokenId);
         // set token uri
         _setTokenURI(newTokenId, _uri);
-        _tokenIdCounter.increment();
-
-        // removed - whitelist
-        // remove whitelisted uri
-        // whitelist[hURI] = 0;
-        // whitelistTokenIds[hURI] = 0;
-
-
         // emit event
         emit NewMeme(memeHash, msg.sender, newTokenId);
     }
@@ -191,12 +159,12 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     }
 
     // get users vote cooldown time (for public use to avoid gas fees trying to vote on memes before cooldown is up)
-    function notOnVoteCooldownTime(address: userAddress) public view returns (uint) {
+    function notOnVoteCooldown(address userAddress) public view returns (bool) {
         return (block.timestamp >= votingCooldown[userAddress]);
     }
 
     // get users creation cooldown time (for public use to avoid gas fees trying to make memes before cooldown is up)
-    function notOnMintCooldownTime(address: userAddress) public view returns (uint) {
+    function notOnMintCooldown(address userAddress) public view returns (bool) {
         return (block.timestamp >= userCooldown[userAddress]);
     }
     
@@ -238,12 +206,11 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     }
 
     // gets all the memeid of memes owned by the sender
-    function getUsersMemes() public view returns (uint[] memory) {
-        address owner = msg.sender;
-        uint[] memory result = new uint[](stashedMemes[owner]);
+    function getUsersMemes(address _userAddress) public view returns (uint[] memory) {
+        uint[] memory result = new uint[](stashedMemes[_userAddress]);
         uint counter = 0;
         for (uint i = 0; i < _tokenIdCounter.current(); i++) {
-            if (memeStash[i] == owner) {
+            if (memeStash[i] == _userAddress) {
                 result[counter] = i;
                 counter++;
             }
@@ -254,12 +221,12 @@ contract MemeMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     function customInitialize() internal {
         cooldownTime = 5 minutes;
         votingCooldownTime = 10 seconds;
-        _setRoyalties(0xC6f9519F8e2C2be0bB29A585A894912Ccea62Dc8, 1000);
+        _setRoyalties(0xC6f9519F8e2C2be0bB29A585A894912Ccea62Dc8, 1500);
         _tokenIdCounter.increment();
     }
 
     function initialize() initializer public {
-        __ERC721_init("NFTMemeMachine", "MEME");
+        __ERC721_init("DankMinter", "MEME");
         __ERC721URIStorage_init();
         __Pausable_init();
         __Ownable_init();

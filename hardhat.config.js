@@ -30,9 +30,10 @@ module.exports = {
     hardhat: {
     },
     matic: {
-      url: "https://matic-mumbai.chainstacklabs.com",
+      // url: "https://rpc-mumbai.maticvigil.com/v1/6271d1806b2b1cb80342e3190d30043d0ac58813",
+      url: "https://rpc-mumbai.matic.today",
       accounts: [PRIVATE_KEY],
-      gasPrice: "auto", 
+      gasPrice: 10000000, 
     }
   },
   solidity: {
