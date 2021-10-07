@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
@@ -35,6 +35,12 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     mapping (bytes32 => uint) private imgHashToMeme;
     // mapping: user address -> cooldown time (allows requiring 5 minute cooldown)
     mapping (address => uint) private userCooldown;
+
+    // whitelisted uri mapping: uri -> memeHash
+    mapping (bytes32 => bytes32) private whitelist; // deprecated
+    // whitelisted uri mapping: uri -> tokenId
+    mapping (bytes32 => uint) private whitelistTokenIds; // deprecated
+
     // mapping: user address -> voting cooldown time
     mapping (address => uint) private votingCooldown;
     // mapping: memeId -> vote score

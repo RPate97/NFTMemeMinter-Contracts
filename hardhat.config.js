@@ -31,13 +31,16 @@ module.exports = {
     },
     matic: {
       // url: "https://rpc-mumbai.maticvigil.com/v1/6271d1806b2b1cb80342e3190d30043d0ac58813",
-      url: "https://rpc-mumbai.matic.today",
+      url: "https://rpc-mumbai.maticvigil.com/",
+      chainId: 80001,
       accounts: [PRIVATE_KEY],
-      gasPrice: 10000000, 
+      gas: 8000000,
+      gasPrice: 8000000, 
+      timeout: 20000
     }
   },
   solidity: {
-    version: "0.8.2",
+    version: "0.8.4",
     settings: {
       optimizer: {
         enabled: true,
