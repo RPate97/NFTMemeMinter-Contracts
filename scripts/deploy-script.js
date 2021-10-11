@@ -18,6 +18,7 @@ async function main() {
   }
 
   await dankMinter.deployed();
+  console.log(dankMinter);
   console.log("DankMinter deployed to:", dankMinter.address);
 }
 

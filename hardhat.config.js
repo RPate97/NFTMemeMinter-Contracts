@@ -29,6 +29,9 @@ module.exports = {
   networks: {
     hardhat: {
     },
+    development: {
+      url: "http://127.0.0.1:8545",
+    },
     matic: {
       // url: "https://rpc-mumbai.maticvigil.com/v1/6271d1806b2b1cb80342e3190d30043d0ac58813",
       url: "https://rpc-mumbai.maticvigil.com/",

@@ -36,7 +36,7 @@ describe('MemeMinter (proxy)', function () {
     const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
 
     // create meme
-    await upgraded.createMeme(templateId, text, imgHash, URI, alice.address);
+    await upgraded.createMeme(templateId, text, imgHash, URI, "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1");
     // get info
     const res = await upgraded.getMeme(1);
     const memeHash = res[0];
