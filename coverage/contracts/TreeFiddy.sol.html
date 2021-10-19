@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Code coverage report for contracts/ERC2981ContractWideRoyalties.sol</title>
+    <title>Code coverage report for contracts/TreeFiddy.sol</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../prettify.css" />
     <link rel="stylesheet" href="../base.css" />
@@ -16,28 +16,28 @@
 <div class='wrapper'>
   <div class='pad1'>
     <h1>
-      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> ERC2981ContractWideRoyalties.sol
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> TreeFiddy.sol
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">80% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>4/5</span>
+        <span class='fraction'>10/10</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">50% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>1/2</span>
+        <span class='fraction'>3/6</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">66.67% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>2/3</span>
+        <span class='fraction'>5/5</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">80% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>4/5</span>
+        <span class='fraction'>10/10</span>
       </div>
     </div>
   </div>
@@ -80,12 +80,7 @@
 35
 36
 37
-38
-39
-40
-41
-42
-43</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+38</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -102,72 +97,62 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
+<span class="cline-any cline-yes">45×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">46×</span>
-<span class="cline-any cline-yes">46×</span>
-<span class="cline-any cline-yes">46×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 &nbsp;
-import '@openzeppelin/contracts/utils/introspection/ERC165.sol';
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 &nbsp;
-import './IERC2981Royalties.sol';
+import "./DankMinter.sol";
 &nbsp;
-/// @dev This is a contract used to add ERC2981 support to ERC721 and 1155
-/// @dev This implementation has the same royalties for each and every tokens
-abstract contract ERC2981ContractWideRoyalties is ERC165, IERC2981Royalties {
-    address private _royaltiesRecipient;
-    uint256 private _royaltiesValue;
+contract TreeFiddy is Initializable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() initializer {}
+    address public dankMinterAddress;
 &nbsp;
-    /// @inheritdoc	ERC165
-<span class="fstat-no" title="function not covered" >    function supportsInterface(bytes4 interfaceID)</span>
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
-<span class="cstat-no" title="statement not covered" >        return interfaceID == type(IERC2981Royalties).interfaceId;</span>
+    function initialize(address _dankMinterAddress) initializer public {
+        __ERC20_init("TreeFiddy", "TF");
+        __ERC20Burnable_init();
+        __Ownable_init();
+        dankMinterAddress = _dankMinterAddress;
     }
 &nbsp;
-    /// @dev Sets token royalties
-    /// @param recipient recipient of the royalties
-    /// @param value percentage (using 2 decimals - 10000 = 100, 0 = 0)
-    function _setRoyalties(address recipient, uint256 value) internal {
-        <span class="missing-if-branch" title="else path not taken" >E</span>require(value &lt;= 10000, 'ERC2981Royalties: Too high');
-        _royaltiesRecipient = recipient;
-        _royaltiesValue = value;
+    function mint(address to, uint256 amount) public {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.sender == dankMinterAddress || msg.sender == owner(), "Sender is not Owner or DankMinter");
+        _mint(to, amount);
     }
 &nbsp;
-    /// @inheritdoc	IERC2981Royalties
-    function royaltyInfo(uint256, uint256 _salePrice)
-        external
-        view
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        return (_royaltiesRecipient, (_salePrice * _royaltiesValue) / 10000);
+    function transferDankMinter(address from, address to, uint amount) public {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.sender == dankMinterAddress, "Sender is not DankMinter");
+        _transfer(from, to, amount); 
+    }
+&nbsp;
+    function burnFromDankMinter(address from, uint amount) public {
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.sender == dankMinterAddress, "Sender is not DankMinter");
+        _burn(from, amount);
     }
 }</pre></td></tr>
 </table></pre>

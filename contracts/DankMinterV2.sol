@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
@@ -9,55 +9,108 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Burnab
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "./@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
+import "./@rarible/royalties/contracts/LibPart.sol";
+import "./@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "./ERC2981ContractWideRoyalties.sol";
+import "./ContentMixin.sol";
+import "./TreeFiddy.sol";
 
-contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties {
+contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, ContextMixin, RoyaltiesV2Impl {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
     using SafeMath for uint256;
 
-    uint cooldownTime;
-    uint votingCooldownTime;
+    address tipAddress;
+    address treeFiddyCoinAddress;
+    uint conversionRate;
+    TreeFiddy tf;
 
     // events
-    event NewMeme(bytes32 memeHash, address owner, uint tokenId);
+    event NewMeme(bytes32 memeHash, address owner, uint tokenId, string uri);
     event BurnedMeme(uint memeHash, address owner, uint tokenId);
-    event UpdatedCooldownTime(uint cooldownTime, string cooldownType);
+    event Tipped(address from, address to, uint amount, uint memeId);
+    event Sacrificed(address sacrificer, uint memeId, uint amount);
+    event LeveledUpDankness(address source, uint memeId, uint danknessTier);
+    event VotedOnMeme(address voter, uint memeId, uint memeScore);
+    event AddedPosting(address poster, uint memeId);
+    event DeletedPosting(address deleter, uint memeId);
     event UpdatedVotingPrice(uint price);
+    event TransferTreeFiddies(address operator, address from, address to, uint amount);
+    event SetTreeFiddyCoinAddress(address treeFiddyCoin);
 
     // mapping: memeId -> memeHash
     mapping (uint => bytes32) private memeToHash;
     // mapping: hash -> memeId
     mapping (bytes32 => uint) private hashToMeme;
-    // mapping: memeId -> imgHash (allows checking to see if the original image matches the img in ipfs)
-    mapping (uint => bytes32) private memeToImgHash;
-    // mapping: imgHash -> memeId (allows requiring original img hashes)
-    mapping (bytes32 => uint) private imgHashToMeme;
-    // mapping: user address -> cooldown time (allows requiring 5 minute cooldown)
-    mapping (address => uint) private userCooldown;
-    // mapping: user address -> voting cooldown time
-    mapping (address => uint) private votingCooldown;
-    // mapping: memeId -> vote score
-    mapping (uint => uint) private memeScore;
     // mapping: user -> ownedMemes
     mapping (address => uint) private stashedMemes;
     // mapping: memeId -> owner
     mapping (uint => address) private memeStash;
     // mapping: memeId -> posting uris
     mapping (uint => string[]) private memePostings;
+    // mapping: memeId -> creator address
+    mapping (uint => address) private memeCreator;
+    // mapping: memeId -> experience
+    mapping (uint => uint) private memeExperience;
+    // mapping: memeId -> dankness tier
+    mapping (uint => uint) private danknessTier;
+    // mapping: meemId -> meme voting score
+    mapping (uint => uint) private memeScore;
+    // mapping: address -> bool has minted before
+    mapping (address => bool) private hasMinted;
+    // mapping: address -> memeId -> bool has voted
+    mapping (address => mapping (uint => bool)) private hasVotedOnMeme;
+    // mapping: address -> uint memelord tier
+    mapping (address => uint) private userLevel;
 
-    uint testUpgradability; 
+    uint testUpgrade;
 
-    // update cooldown time
-    function updateCreationCooldownTime(uint _newCooldownTime) public onlyOwner {
-        cooldownTime = _newCooldownTime;
-        emit UpdatedCooldownTime(cooldownTime, "creation");
+    // meme struct used for returning memes from function calls
+    struct Meme {
+        bytes32 memeHash;
+        string uri;
+        uint memeId;
+        uint score;
+        uint danknessTier;
+        uint experience;
+        address creator;
+        string[] postings;
     }
 
-    // updating voting cooldown time
-    function updateVotingCooldownTime(uint _newCooldowntime) public onlyOwner {
-        votingCooldownTime = _newCooldowntime;
-        emit UpdatedCooldownTime(cooldownTime, "voting");
+    // struct used to bulk mint memes
+    struct MemeToCreate {
+        uint32 templateId;
+        string[] text;
+        string uri;
+        address mintToAddress;
+    }
+
+    modifier tokenExists(uint _memeId) {
+        require(_exists(_memeId), "meme does not exist");
+        _;
+    }
+
+    // sets the contract address for TreeFiddyCoin
+    function setTreeFiddyCoinAddress(address _contractAddr) public onlyOwner {
+        treeFiddyCoinAddress = _contractAddr;
+        tf = TreeFiddy(treeFiddyCoinAddress);
+        emit SetTreeFiddyCoinAddress(treeFiddyCoinAddress);
+    }
+
+    // private utility minting function for TreeFiddies
+    function _mintTreeFiddies(address _to, uint amount) private {
+        tf.mint(_to, amount);
+    }
+
+    // private utility burning function for TreeFiddies
+    function _burnTreeFiddies(address _from, uint amount) private {
+        tf.burnFromDankMinter(_from, amount);
+    }
+
+    // private utility transfer function for TreeFiddies
+    function _treeFiddyCoinTransferFrom(address _from, address _to, uint amount) private {
+        tf.transferDankMinter(_from, _to, amount); 
     }
 
     // hashes the content of a meme
@@ -75,71 +128,50 @@ contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgra
         return (memeId == 0, memeId);
     }
 
-    // verifies that the ipfs image is the original
-    // compares the memeImgHash with the passed in imgHash and returns result
-    function verifyOriginalImage(uint tokenId, bytes32 imgHash) public view returns (bool) {
-        return memeToImgHash[tokenId] == imgHash;
+    function batchMintMemes(MemeToCreate[] memory _memesToMint) public onlyOwner {
+        for (uint i = 0; i < _memesToMint.length; i++) {
+            createMeme(_memesToMint[i].templateId, _memesToMint[i].text, _memesToMint[i].uri, _memesToMint[i].mintToAddress);
+        }
     }
 
     // creates a new meme
-    function createMeme(uint32 _templateId, string[] memory _text, bytes32 imgHash, string memory _uri, address mintToAddress) public onlyOwner {
-        // require 10 minute cooldown has passed 
-        require(block.timestamp >= userCooldown[mintToAddress], "cooldown error");
+    function createMeme(uint32 _templateId, string[] memory _text, string memory _uri, address _mintToAddress) public onlyOwner {
         // get meme hash
         bytes32 memeHash = _hashContent(_templateId, _text);
         // require unique meme hash
         require(hashToMeme[memeHash] == 0, "not unique error");
+        // mint or charge treefiddies
+        if (hasMinted[_mintToAddress] == false) {
+            // mint tree fiddies - how many? about tree fiddy
+            _mintTreeFiddies(_mintToAddress, 175 * conversionRate);
+            hasMinted[_mintToAddress] = true;
+            userLevel[_mintToAddress] = 1;
+        } else {
+            // burn 7 treefiddies
+            _burnTreeFiddies(_mintToAddress, 35 * conversionRate);
+        }
         // get new token id
         uint newTokenId = _tokenIdCounter.current();
         // set memeid to hash
         memeToHash[newTokenId] = memeHash;
         // map hash to memeid
         hashToMeme[memeHash] = newTokenId;
-        // map memeid to image hash
-        memeToImgHash[newTokenId] = imgHash;
-        // map imgHash to memeId
-        imgHashToMeme[imgHash] = newTokenId;
-        // update sender cooldown
-        userCooldown[mintToAddress] = block.timestamp + cooldownTime;
-        // map score
+        // map experience
+        memeExperience[newTokenId] = 1;
+        // map dankness tier
+        danknessTier[newTokenId] = 1;
+        // map voting score
         memeScore[newTokenId] = 1;
-        // increment stashed memes
-        stashedMemes[mintToAddress] = stashedMemes[mintToAddress].add(1);
         // assign owner
-        memeStash[newTokenId] = mintToAddress;
+        memeStash[newTokenId] = _mintToAddress;
+        // assign creator
+        memeCreator[newTokenId] = _mintToAddress;
         // safemint
-        safeMint(mintToAddress, newTokenId);
+        safeMint(_mintToAddress, newTokenId);
         // set token uri
         _setTokenURI(newTokenId, _uri);
-        _tokenIdCounter.increment();
         // emit event
-        emit NewMeme(memeHash, msg.sender, newTokenId);
-    }
-
-    // function to vote on a meme (payable to avoid people constantly upvoting their own memes)
-    function voteOnMeme(uint _memeId, bool upDown) public {
-        require(block.timestamp >= votingCooldown[msg.sender], "voting cooldown error");
-        if (upDown) {
-            memeScore[_memeId] = memeScore[_memeId].add(1);
-        } else {
-            memeScore[_memeId] = memeScore[_memeId].sub(1);
-        }
-        votingCooldown[msg.sender] = block.timestamp + votingCooldownTime;
-    }
-
-    // function to add a posting link to a meme
-    function addPosting(uint _memeId, string memory posting) public {
-        require(msg.sender == memeStash[_memeId], "error sender is not the owner");
-        memePostings[_memeId].push(posting);
-    }
-
-    // function to remove a posting link to a meme
-    function removePosting(uint _memeId, uint index) public {
-        require(msg.sender == memeStash[_memeId], "error sender is not the owner");
-        string[] storage postings = memePostings[_memeId];
-        delete postings[index];
-        postings[index] = postings[postings.length - 1];
-        delete postings[postings.length - 1];
+        emit NewMeme(memeHash, _mintToAddress, newTokenId, _uri);
     }
 
     // withdraw vote payments
@@ -148,37 +180,92 @@ contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgra
         payable(_owner).transfer(address(this).balance);
     }
 
-    // update royalty value
-    function updateRoyalties(address _recipient, uint _royalties) public onlyOwner {
-        _setRoyalties(_recipient, _royalties);
+    // utility to recalculate dankness tier upon increasing experience
+    function recalculateDankness(uint _memeId) private {
+        uint experience = memeExperience[_memeId];
+        uint requiredExp;
+        if (danknessTier[_memeId] < 5) {
+            requiredExp = 10 ** (danknessTier[_memeId] + 1);
+        } else {
+            requiredExp = 100000 + 20000 * danknessTier[_memeId];
+        }
+        if (experience >= requiredExp) {
+            memeExperience[_memeId] = experience.sub(requiredExp);
+            danknessTier[_memeId] = danknessTier[_memeId].add(1);
+            emit LeveledUpDankness(msg.sender, _memeId, danknessTier[_memeId]);
+        }
+    }
+    
+    // toss a coin to the developer
+    function tossACoin(uint amount) public {
+        _treeFiddyCoinTransferFrom(msg.sender, tipAddress, amount);
+        emit Tipped(msg.sender, tipAddress, amount, 0);
+    }
+
+    // tip the creator of a meme
+    function tipCreator(uint _memeId, uint amount) public tokenExists(_memeId) {
+        address _to = memeCreator[_memeId];
+        _treeFiddyCoinTransferFrom(msg.sender, _to, amount);
+        emit Tipped(msg.sender, _to, amount, _memeId);
+    }
+
+    // sacrifice upon the meme altar
+    function sacrificeToMeme(uint _memeId, uint amount) public tokenExists(_memeId) {
+        _burnTreeFiddies(msg.sender, amount);
+        uint experienceImpact = (amount * 2) / (3 * conversionRate);
+        experienceImpact = experienceImpact.add((amount * 2) / (5 * conversionRate / 10));
+        memeExperience[_memeId] = memeExperience[_memeId].add(experienceImpact);
+        recalculateDankness(_memeId);
+        emit Sacrificed(msg.sender, _memeId, amount);
+    }
+
+    // function to vote on a meme (payable to avoid people constantly upvoting their own memes)
+    function voteOnMeme(uint _memeId, bool upDown) public tokenExists(_memeId) {
+        require(hasVotedOnMeme[msg.sender][_memeId] == false, "already voted on this meme");
+        uint reward = 3 * conversionRate;
+        reward = reward.add(5 * conversionRate / 10);
+        _mintTreeFiddies(msg.sender, reward);
+        if (upDown) {
+            memeExperience[_memeId] = memeExperience[_memeId].add(25);
+            memeScore[_memeId] = memeScore[_memeId].add(1);
+        } else {
+            if (memeExperience[_memeId] >= 10) {
+                memeExperience[_memeId] = memeExperience[_memeId].sub(25);
+            }
+            memeScore[_memeId] = memeScore[_memeId].sub(1);
+        }
+        recalculateDankness(_memeId);
+        emit VotedOnMeme(msg.sender, _memeId, memeScore[_memeId]);
+    }
+
+    // function to add a posting link to a meme
+    function addPosting(uint _memeId, string memory posting) public tokenExists(_memeId) {
+        require(msg.sender == memeStash[_memeId], "error sender is not the owner");
+        uint _cost = 7 * conversionRate;
+        _burnTreeFiddies(msg.sender, _cost);
+        memePostings[_memeId].push(posting);
+        memeExperience[_memeId] = memeExperience[_memeId].add(20);
+        recalculateDankness(_memeId);
+        emit AddedPosting(msg.sender, _memeId);
+    }
+
+    // function to remove a posting link to a meme
+    function removePosting(uint _memeId, uint index) public tokenExists(_memeId) {
+        require(msg.sender == memeStash[_memeId], "error sender is not the owner");
+        string[] storage postings = memePostings[_memeId];
+        delete postings[index];
+        postings[index] = postings[postings.length - 1];
+        delete postings[postings.length - 1];
+        memeExperience[_memeId] = memeExperience[_memeId].sub(20);
+        recalculateDankness(_memeId);
+        emit DeletedPosting(msg.sender, _memeId);
     }
 
     // getters
-    // get creation cooldown
-    function getCreationCooldownTime() public view returns (uint) {
-        return cooldownTime;
-    }
-
-    // get users vote cooldown time (for public use to avoid gas fees trying to vote on memes before cooldown is up)
-    function notOnVoteCooldown(address userAddress) public view returns (bool) {
-        return (block.timestamp >= votingCooldown[userAddress]);
-    }
-
-    // get users creation cooldown time (for public use to avoid gas fees trying to make memes before cooldown is up)
-    function notOnMintCooldown(address userAddress) public view returns (bool) {
-        return (block.timestamp >= userCooldown[userAddress]);
-    }
-    
     // gets a tokenId with the template + text hash
-    function getMemeWithHash(bytes32 _memeHash) public view returns (string memory, uint) {
+    function getMemeWithHash(bytes32 _memeHash) public view returns (Meme memory) {
         uint memeId = hashToMeme[_memeHash];
-        return (tokenURI(memeId), memeId);
-    }
-
-    // gets a meme with the image hash
-    function getMemeWithImageHash(bytes32 _imgHash) public view returns (string memory, uint) {
-        uint memeId = imgHashToMeme[_imgHash];
-        return (tokenURI(memeId), memeId);
+        return getMeme(memeId);
     }
 
     // gets a meme template + text hash with token id
@@ -186,49 +273,112 @@ contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgra
         return memeToHash[_tokenId];
     }
 
-    // gets a meme template + text hash with token id
-    function getMemeImgHash(uint _tokenId) internal view returns (bytes32) {
-        return memeToImgHash[_tokenId];
+    // gets a memes current experience
+    function getMemeExperience(uint _tokenId) internal view returns (uint) {
+        return memeExperience[_tokenId];
     }
 
-    // gets a meme template + text hash with token id
+    // gets a memes current dankness tier
+    function getMemeDankness(uint _tokenId) internal view returns (uint) {
+        return danknessTier[_tokenId];
+    }
+
+    // gets current voting score
     function getMemeScore(uint _tokenId) internal view returns (uint) {
         return memeScore[_tokenId];
     }
 
-    // gets all meme onchain metadata
-    function getMeme(uint _memeId) public view returns (bytes32, bytes32, uint, string memory, string[] memory) {
+    // gets meme onchain metadata
+    function getMeme(uint _memeId) public view returns (Meme memory) {
         bytes32 memeHash = getMemeHash(_memeId);
-        bytes32 imgHash = getMemeImgHash(_memeId);
+        uint experience = getMemeExperience(_memeId);
         uint score = getMemeScore(_memeId);
+        uint dankness = getMemeDankness(_memeId);
         string memory uri = tokenURI(_memeId);
         string[] memory postings = memePostings[_memeId];
-        return (memeHash, imgHash, score, uri, postings);
+        address creator = memeCreator[_memeId];
+        return Meme(memeHash, uri, _memeId, score, dankness, experience, creator, postings);
     }
 
-    // gets all the memeid of memes owned by the sender
-    function getUsersMemes() public view returns (uint[] memory) {
-        address owner = msg.sender;
-        uint[] memory result = new uint[](stashedMemes[owner]);
+    // gets all memes in passed in array
+    function getMemes(uint[] memory _memeIds) public view returns (Meme[] memory) {
+        Meme[] memory userMemes = new Meme[](_memeIds.length);
+        for (uint i = 0; i < _memeIds.length; i++) {
+            userMemes[i] = getMeme(_memeIds[i]);
+        }
+        return userMemes;
+    }
+
+    // gets all the memeIds of memes owned by the sender
+    function getUsersMemes(address _userAddress) public view returns (Meme[] memory) {
+        uint[] memory result = new uint[](stashedMemes[_userAddress]);
         uint counter = 0;
         for (uint i = 0; i < _tokenIdCounter.current(); i++) {
-            if (memeStash[i] == owner) {
+            if (memeStash[i] == _userAddress) {
                 result[counter] = i;
                 counter++;
             }
         }
-        return result;
+        Meme[] memory userMemes = getMemes(result);
+        return userMemes;
+    }
+
+    function getNumStashedMemes(address _userAddress) public view returns (uint) {
+        return stashedMemes[_userAddress];
+    }
+
+    /**
+     * This is used instead of msg.sender as transactions won't be sent by the original token owner, but by OpenSea.
+     */
+    function _msgSender()
+        internal
+        override
+        view
+        returns (address sender)
+    {
+        return ContextMixin.msgSender();
+    }
+
+   /**
+   * Override isApprovedForAll to auto-approve OS's proxy contract
+   */
+    function isApprovedForAll(
+        address _owner,
+        address _operator
+    ) public override view returns (bool isOperator) {
+      // if OpenSea's ERC721 Proxy Address is detected, auto-return true
+        if (_operator == address(0x58807baD0B376efc12F5AD86aAc70E78ed67deaE)) {
+            return true;
+        }
+        
+        // otherwise, use the default ERC721.isApprovedForAll()
+        return ERC721Upgradeable.isApprovedForAll(_owner, _operator);
+    }
+
+    // update EIP-2981 royalty value
+    function updateRoyalties(address payable _recipient, uint _royalties) public onlyOwner {
+        _setRoyalties(_recipient, _royalties);
+        setRoyalties(0, _recipient, uint96(_royalties));
+    }
+
+    // set rarible royalties
+    function setRoyalties(uint _tokenId, address payable _royaltiesReceipientAddress, uint96 _percentageBasisPoints) public onlyOwner {
+        LibPart.Part[] memory _royalties = new LibPart.Part[](1);
+        _royalties[0].value = _percentageBasisPoints;
+        _royalties[0].account = _royaltiesReceipientAddress;
+        _saveRoyalties(_tokenId, _royalties);
     }
 
     function customInitialize() internal {
-        cooldownTime = 5 minutes;
-        votingCooldownTime = 10 seconds;
-        _setRoyalties(0xC6f9519F8e2C2be0bB29A585A894912Ccea62Dc8, 1000);
+        tipAddress = 0xC6f9519F8e2C2be0bB29A585A894912Ccea62Dc8;
+        conversionRate = 10 ** 18;
+        _setRoyalties(tipAddress, 1500);
+        setRoyalties(0, payable(tipAddress), uint96(1500));
         _tokenIdCounter.increment();
     }
 
     function initialize() initializer public {
-        __ERC721_init("NFTMemeMachine", "MEME");
+        __ERC721_init("DankMinter", "MEME");
         __ERC721URIStorage_init();
         __Pausable_init();
         __Ownable_init();
@@ -245,7 +395,7 @@ contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgra
     }
 
     function safeMint(address to, uint tokenId) internal {
-        _safeMint(to, tokenId);
+        _safeMint(to, tokenId); // broken line
         _tokenIdCounter.increment();
     }
 
@@ -255,6 +405,7 @@ contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgra
         override
     {
         super._beforeTokenTransfer(from, to, tokenId);
+        memeExperience[tokenId] = memeExperience[tokenId].add(5);
         if (address(from) == address(0x0)) {
             stashedMemes[to] = stashedMemes[to].add(1);
             memeStash[tokenId] = to;
@@ -286,6 +437,9 @@ contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721URIStorageUpgra
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC2981ContractWideRoyalties, ERC721Upgradeable) returns (bool) {
+        if(interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) {
+            return true;
+        }
         return super.supportsInterface(interfaceId);
     }
 }
