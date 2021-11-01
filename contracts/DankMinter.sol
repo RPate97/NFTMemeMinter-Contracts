@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -16,7 +18,7 @@ import "./ERC2981ContractWideRoyalties.sol";
 import "./ContentMixin.sol";
 import "./TreeFiddy.sol";
 
-contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, ContextMixin, RoyaltiesV2Impl {
+contract DankMinter is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, ERC721URIStorageUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, ContextMixin, RoyaltiesV2Impl {
     using CountersUpgradeable for CountersUpgradeable.Counter;
     CountersUpgradeable.Counter private _tokenIdCounter;
     using SafeMath for uint256;
@@ -28,6 +30,7 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
 
     // events
     event NewMeme(bytes32 memeHash, address owner, uint tokenId, string uri);
+    event FailedMint(bytes32 memeHash, address owner, string message);
     event BurnedMeme(uint memeHash, address owner, uint tokenId);
     event Tipped(address from, address to, uint amount, uint memeId);
     event Sacrificed(address sacrificer, uint memeId, uint amount);
@@ -43,26 +46,23 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     mapping (uint => bytes32) private memeToHash;
     // mapping: hash -> memeId
     mapping (bytes32 => uint) private hashToMeme;
-    // mapping: user -> ownedMemes
-    mapping (address => uint) private stashedMemes;
-    // mapping: memeId -> owner
-    mapping (uint => address) private memeStash;
-    // mapping: memeId -> posting uris
-    mapping (uint => string[]) private memePostings;
+
     // mapping: memeId -> creator address
     mapping (uint => address) private memeCreator;
-    // mapping: memeId -> experience
-    mapping (uint => uint) private memeExperience;
-    // mapping: memeId -> dankness tier
-    mapping (uint => uint) private danknessTier;
     // mapping: meemId -> meme voting score
     mapping (uint => uint) private memeScore;
+
     // mapping: address -> bool has minted before
     mapping (address => bool) private hasMinted;
     // mapping: address -> memeId -> bool has voted
     mapping (address => mapping (uint => bool)) private hasVotedOnMeme;
-    // mapping: address -> uint memelord tier
-    mapping (address => uint) private userLevel;
+
+    // mapping: memeId -> experience
+    mapping (uint => uint) private memeExperience;
+    // mapping: memeId -> next level required experience
+    mapping (uint => uint) private requiredMemeExperience;
+    // mapping: memeId -> dankness tier
+    mapping (uint => uint) private memeDanknessTier;
 
     // meme struct used for returning memes from function calls
     struct Meme {
@@ -72,8 +72,8 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         uint score;
         uint danknessTier;
         uint experience;
+        uint requiredExperience;
         address creator;
-        string[] postings;
     }
 
     // struct used to bulk mint memes
@@ -126,6 +126,16 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         return (memeId == 0, memeId);
     }
 
+    // check if a hash is original (for public use to avoid gas fees trying unoriginal memes)
+    function isOriginalHash(bytes32 _memeHash) public view returns (bool, uint) {
+        uint memeId = hashToMeme[_memeHash];
+        return (memeId == 0, memeId);
+    }
+
+    function userHasMinted(address _userAddress) public view returns (bool) {
+        return hasMinted[_userAddress];
+    }
+
     function batchMintMemes(MemeToCreate[] memory _memesToMint) public onlyOwner {
         for (uint i = 0; i < _memesToMint.length; i++) {
             createMeme(_memesToMint[i].templateId, _memesToMint[i].text, _memesToMint[i].uri, _memesToMint[i].mintToAddress);
@@ -136,17 +146,19 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     function createMeme(uint32 _templateId, string[] memory _text, string memory _uri, address _mintToAddress) public onlyOwner {
         // get meme hash
         bytes32 memeHash = _hashContent(_templateId, _text);
-        // require unique meme hash
-        require(hashToMeme[memeHash] == 0, "not unique error");
         // mint or charge treefiddies
         if (hasMinted[_mintToAddress] == false) {
             // mint tree fiddies - how many? about tree fiddy
             _mintTreeFiddies(_mintToAddress, 175 * conversionRate);
             hasMinted[_mintToAddress] = true;
-            userLevel[_mintToAddress] = 1;
         } else {
             // burn 7 treefiddies
-            _burnTreeFiddies(_mintToAddress, 35 * conversionRate);
+            if (tf.balanceOf(_mintToAddress) >= 35 * conversionRate) {
+                _burnTreeFiddies(_mintToAddress, 35 * conversionRate);
+            } else {
+                emit FailedMint(memeHash, _mintToAddress, "not enough treefiddies");
+                return;
+            }
         }
         // get new token id
         uint newTokenId = _tokenIdCounter.current();
@@ -157,11 +169,11 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         // map experience
         memeExperience[newTokenId] = 1;
         // map dankness tier
-        danknessTier[newTokenId] = 1;
+        memeDanknessTier[newTokenId] = 1;
+        // map meme required xp
+        requiredMemeExperience[newTokenId] = calculateRequiredMemeXP(1);
         // map voting score
         memeScore[newTokenId] = 1;
-        // assign owner
-        memeStash[newTokenId] = _mintToAddress;
         // assign creator
         memeCreator[newTokenId] = _mintToAddress;
         // safemint
@@ -178,19 +190,25 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         payable(_owner).transfer(address(this).balance);
     }
 
+    function calculateRequiredMemeXP(uint _memeDanknessTier) private pure returns (uint) {
+        uint requiredXP;
+        if (_memeDanknessTier < 5) {
+            requiredXP = 10 ** (_memeDanknessTier + 1);
+        } else {
+            requiredXP = 100000 + 20000 * _memeDanknessTier;
+        }
+        return requiredXP;
+    }
+
     // utility to recalculate dankness tier upon increasing experience
     function recalculateDankness(uint _memeId) private {
         uint experience = memeExperience[_memeId];
-        uint requiredExp;
-        if (danknessTier[_memeId] < 5) {
-            requiredExp = 10 ** (danknessTier[_memeId] + 1);
-        } else {
-            requiredExp = 100000 + 20000 * danknessTier[_memeId];
-        }
+        uint requiredExp = requiredMemeExperience[_memeId];
         if (experience >= requiredExp) {
             memeExperience[_memeId] = experience.sub(requiredExp);
-            danknessTier[_memeId] = danknessTier[_memeId].add(1);
-            emit LeveledUpDankness(msg.sender, _memeId, danknessTier[_memeId]);
+            memeDanknessTier[_memeId] = memeDanknessTier[_memeId].add(1);
+            requiredMemeExperience[_memeId] = calculateRequiredMemeXP(memeDanknessTier[_memeId]);
+            emit LeveledUpDankness(msg.sender, _memeId, memeDanknessTier[_memeId]);
         }
     }
     
@@ -236,29 +254,6 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         emit VotedOnMeme(msg.sender, _memeId, memeScore[_memeId]);
     }
 
-    // function to add a posting link to a meme
-    function addPosting(uint _memeId, string memory posting) public tokenExists(_memeId) {
-        require(msg.sender == memeStash[_memeId], "error sender is not the owner");
-        uint _cost = 7 * conversionRate;
-        _burnTreeFiddies(msg.sender, _cost);
-        memePostings[_memeId].push(posting);
-        memeExperience[_memeId] = memeExperience[_memeId].add(20);
-        recalculateDankness(_memeId);
-        emit AddedPosting(msg.sender, _memeId);
-    }
-
-    // function to remove a posting link to a meme
-    function removePosting(uint _memeId, uint index) public tokenExists(_memeId) {
-        require(msg.sender == memeStash[_memeId], "error sender is not the owner");
-        string[] storage postings = memePostings[_memeId];
-        delete postings[index];
-        postings[index] = postings[postings.length - 1];
-        delete postings[postings.length - 1];
-        memeExperience[_memeId] = memeExperience[_memeId].sub(20);
-        recalculateDankness(_memeId);
-        emit DeletedPosting(msg.sender, _memeId);
-    }
-
     // getters
     // gets a tokenId with the template + text hash
     function getMemeWithHash(bytes32 _memeHash) public view returns (Meme memory) {
@@ -278,7 +273,7 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
 
     // gets a memes current dankness tier
     function getMemeDankness(uint _tokenId) internal view returns (uint) {
-        return danknessTier[_tokenId];
+        return memeDanknessTier[_tokenId];
     }
 
     // gets current voting score
@@ -293,9 +288,9 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         uint score = getMemeScore(_memeId);
         uint dankness = getMemeDankness(_memeId);
         string memory uri = tokenURI(_memeId);
-        string[] memory postings = memePostings[_memeId];
         address creator = memeCreator[_memeId];
-        return Meme(memeHash, uri, _memeId, score, dankness, experience, creator, postings);
+        uint requiredExperience = requiredMemeExperience[_memeId];
+        return Meme(memeHash, uri, _memeId, score, dankness, experience, requiredExperience, creator);
     }
 
     // gets all memes in passed in array
@@ -307,22 +302,32 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         return userMemes;
     }
 
-    // gets all the memeIds of memes owned by the sender
+    // gets all memes owned by the address
     function getUsersMemes(address _userAddress) public view returns (Meme[] memory) {
-        uint[] memory result = new uint[](stashedMemes[_userAddress]);
-        uint counter = 0;
-        for (uint i = 0; i < _tokenIdCounter.current(); i++) {
-            if (memeStash[i] == _userAddress) {
-                result[counter] = i;
-                counter++;
-            }
+        uint userNumMemes = balanceOf(_userAddress);
+        uint[] memory result = new uint[](userNumMemes);
+        for (uint i = 0; i < userNumMemes; i++) {
+            uint tokenId = tokenOfOwnerByIndex(_userAddress, i);
+            result[i] = tokenId;
         }
-        Meme[] memory userMemes = getMemes(result);
-        return userMemes;
+        return getMemes(result);
     }
 
-    function getNumStashedMemes(address _userAddress) public view returns (uint) {
-        return stashedMemes[_userAddress];
+    // gets users cumulative dankness
+    function getUsersDankness(address _userAddress) public view returns (uint cumulativeDankness) {
+        uint userNumMemes = balanceOf(_userAddress);
+        cumulativeDankness = 0;
+        for (uint i = 0; i < userNumMemes; i++) {
+            cumulativeDankness = cumulativeDankness + getMemeDankness(tokenOfOwnerByIndex(_userAddress, i));
+        }   
+    }
+
+    function getUserInfo(address _userAddress) public view returns (Meme[] memory memes, uint cumulativeDankness) {
+        memes = getUsersMemes(_userAddress);
+        cumulativeDankness = 0;
+        for (uint i = 0; i < memes.length; i++) {
+            cumulativeDankness = cumulativeDankness + memes[i].danknessTier;
+        }
     }
 
     /**
@@ -400,21 +405,9 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
     function _beforeTokenTransfer(address from, address to, uint256 tokenId)
         internal
         whenNotPaused
-        override
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
     {
         super._beforeTokenTransfer(from, to, tokenId);
-        memeExperience[tokenId] = memeExperience[tokenId].add(5);
-        if (address(from) == address(0x0)) {
-            stashedMemes[to] = stashedMemes[to].add(1);
-            memeStash[tokenId] = to;
-        } else if (address(to) == address(0x0)) {
-            stashedMemes[from] = stashedMemes[from].sub(1);
-            memeStash[tokenId] = to;
-        } else {
-            stashedMemes[from] = stashedMemes[from].sub(1);
-            stashedMemes[to] = stashedMemes[to].add(1);
-            memeStash[tokenId] = to;
-        }
     }
 
     // The following functions are overrides required by Solidity.
@@ -434,7 +427,10 @@ contract DankMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgrade
         return super.tokenURI(tokenId);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC2981ContractWideRoyalties, ERC721Upgradeable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) 
+        public 
+        view 
+        override(ERC2981ContractWideRoyalties, ERC721Upgradeable, ERC721EnumerableUpgradeable) returns (bool) {
         if(interfaceId == LibRoyaltiesV2._INTERFACE_ID_ROYALTIES) {
             return true;
         }

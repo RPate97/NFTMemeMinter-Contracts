@@ -52,8 +52,8 @@ describe('MemeMinter (proxy)', function () {
     const memeScore = res[3];
     const dankness = res[4];
     const experience = res[5];
-    const creatorAddr = res[6];
-    const postings = res[7];
+    const requiredExperience = res[6];
+    const creatorAddr = res[7];
     // expect correct info
     expect(memeHash).to.equal(hash, "meme hash is not correct");
     expect(memeId).to.equal(1, "memeId is not correct");
@@ -61,8 +61,8 @@ describe('MemeMinter (proxy)', function () {
     expect(memeUri).to.equal(memeUri, "uri is not correct");
     expect(dankness).to.equal(1, "dankness tier is not correct");
     expect(experience).to.equal(1, "experience is not correct");
+    expect(requiredExperience).to.equal(100, "required experience is not correct");
     expect(creatorAddr).to.equal(alice.address, "experience is not correct");
-    expect(postings).to.deep.equal([], "postings is not correct");
     // verify memeId returned with hash
     const res2 = await upgraded.getMemeWithHash(hash);
     expect(res2[0]).to.equal(hash, "meme hash is not correct");
@@ -71,11 +71,11 @@ describe('MemeMinter (proxy)', function () {
     expect(res2[3]).to.equal(1, "score is not correct");
     expect(res2[4]).to.equal(1, "dankness tier is not correct");
     expect(res2[5]).to.equal(1, "experience is not correct");
-    expect(res2[6]).to.equal(alice.address, "creator address is not correct");
-    expect(res2[7]).to.deep.equal([], "postings is not correct");
+    expect(res2[6]).to.equal(100, "required experience is not correct");
+    expect(res2[7]).to.equal(alice.address, "creator address is not correct");
     // expect correct number of treefiddies
     const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("35000000000000000000", 'incorrect number of treefiddies');
+    expect(res3.toString()).to.equal("175000000000000000000", 'incorrect number of treefiddies');
   });
  
   it('Mint a token, expect correct URI and correct hash, expect memeId to be returned using hash', async function () {
@@ -102,8 +102,8 @@ describe('MemeMinter (proxy)', function () {
     const memeScore = res[3];
     const dankness = res[4];
     const experience = res[5];
-    const creatorAddr = res[6];
-    const postings = res[7];
+    const requiredExperience = res[6];
+    const creatorAddr = res[7];
     // expect correct info
     expect(memeHash).to.equal(hash, "meme hash is not correct");
     expect(memeId).to.equal(1, "memeId is not correct");
@@ -111,8 +111,8 @@ describe('MemeMinter (proxy)', function () {
     expect(memeUri).to.equal(memeUri, "uri is not correct");
     expect(dankness).to.equal(1, "dankness tier is not correct");
     expect(experience).to.equal(1, "experience is not correct");
+    expect(requiredExperience).to.equal(100, "required experience is not correct");
     expect(creatorAddr).to.equal(alice.address, "experience is not correct");
-    expect(postings).to.deep.equal([], "postings is not correct");
     // verify memeId returned with hash
     const res2 = await upgraded.getMemeWithHash(hash);
     expect(res2[0]).to.equal(hash, "meme hash is not correct");
@@ -121,65 +121,43 @@ describe('MemeMinter (proxy)', function () {
     expect(res2[3]).to.equal(1, "score is not correct");
     expect(res2[4]).to.equal(1, "dankness tier is not correct");
     expect(res2[5]).to.equal(1, "experience is not correct");
-    expect(res2[6]).to.equal(alice.address, "creator address is not correct");
-    expect(res2[7]).to.deep.equal([], "postings is not correct");
+    expect(res2[6]).to.equal(100, "required experience is not correct");
+    expect(res2[7]).to.equal(alice.address, "creator address is not correct");
     // expect correct number of treefiddies
     const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("35000000000000000000", 'incorrect number of treefiddies');
+    expect(res3.toString()).to.equal("175000000000000000000", 'incorrect number of treefiddies');
   });
 
-  it('Mint token, mint another token and expect revert with cooldown error', async function () {
+  it('Mint token, mint another token and expect revert with not unique', async function () {
     // meme info
     const templateId = 0;
     const text = ["some text", "some more text"];
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
     const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
-    // create meme
-    await memeMachine.createMeme(templateId, text, URI, alice.address);
-    // create another meme and expect revert
-    await expect(memeMachine.createMeme(templateId, text, URI2, alice.address)).to.be.revertedWith("cooldown error");
-  });
-
-  it('Mint token, update creation cooldown, mint another token and expect revert with not unique', async function () {
-    // meme info
-    const templateId = 0;
-    const text = ["some text", "some more text"];
-    const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
-    const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
-    // update cooldown
-    await memeMachine.updateCreationCooldownTime(0);
     // create meme
     await memeMachine.createMeme(templateId, text, URI, alice.address);
     // create another meme and expect revert
     await expect(memeMachine.createMeme(templateId, text, URI2, alice.address)).to.be.revertedWith("not unique error");
   });
 
-  it('Mint token, update creation cooldown, mint another token, expect both tokens returned with getUsersMemes', async function () {
+  it('Mint token, mint another token, expect both tokens returned with getUsersMemes', async function () {
     // meme info
     const templateId = 0;
     const text = ["some text", "some more text"];
     const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
     const URI2 = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv-two";
-    // update cooldown
-    await memeMachine.updateCreationCooldownTime(0);
     // create meme
     await memeMachine.createMeme(templateId, text, URI, alice.address);
     // create another meme and expect revert
     await memeMachine.createMeme(1, ["some unique text"], URI2, alice.address);
     // get users memes
     const res = await memeMachine.getUsersMemes(alice.address);
+    console.log(res);
     expect(res[0][2]).to.equal(1);
     expect(res[1][2]).to.equal(2);
     // expect correct number of treefiddies
     const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("70000000000000000000", 'incorrect number of treefiddies');
-  });
-
-  it('Update creation cooldown time, expect correct cooldown time', async function() {
-    const newCooldownTime = 0;
-    await memeMachine.updateCreationCooldownTime(newCooldownTime);
-    const res = await memeMachine.getCreationCooldownTime();
-    expect(res).to.equal(0);
+    expect(res3.toString()).to.equal("140000000000000000000", 'incorrect number of treefiddies');
   });
 
   it('Mint meme and upvote it, expect correct score', async function() {
@@ -195,7 +173,7 @@ describe('MemeMinter (proxy)', function () {
     expect(res[3]).to.equal(2);
     // expect correct number of treefiddies
     const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("31500000000000000000", 'incorrect number of treefiddies');
+    expect(res3.toString()).to.equal("178500000000000000000", 'incorrect number of treefiddies');
   });
 
   it('Mint meme and downvote it, expect correct score', async function() {
@@ -211,7 +189,7 @@ describe('MemeMinter (proxy)', function () {
     expect(res[3]).to.equal(0);
     // expect correct number of treefiddies
     const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("31500000000000000000", 'incorrect number of treefiddies');
+    expect(res3.toString()).to.equal("178500000000000000000", 'incorrect number of treefiddies');
   });
 
   it('Mint meme, upvote and upvote again', async function() {
@@ -228,7 +206,7 @@ describe('MemeMinter (proxy)', function () {
     expect(res[3]).to.equal(3);
     // expect correct number of treefiddies
     const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("28000000000000000000", 'incorrect number of treefiddies');
+    expect(res3.toString()).to.equal("182000000000000000000", 'incorrect number of treefiddies');
   });
 
   it('expect correct royalty info', async function() {
@@ -280,25 +258,6 @@ describe('MemeMinter (proxy)', function () {
     expect(res2[1]).to.equal(0);
   });
 
-  it('Mint meme, add posting to meme, add another posting to meme, remove posting 1 from meme, expect posting 2 uri to resolve correctly', async function() {
-    const templateId = 0;
-    const text = ["some text", "some more text"];
-    const URI = "ipfs://QmWJBNeQAm9Rh4YaW8GFRnSgwa4dN889VKm9poc2DQPBkv";
-    const postingOne = "abcd";
-    const postingTwo = "abcdefg";
-    // create meme
-    await memeMachine.createMeme(templateId, text, URI, alice.address);
-    // add posting to meme
-    await memeMachine.addPosting(1, postingOne);
-    await memeMachine.addPosting(1, postingTwo);
-    await memeMachine.removePosting(1, 0);
-    const res = await memeMachine.getMeme(1);
-    expect(res[7][0]).to.equal(postingTwo);
-    // expect correct number of treefiddies
-    const res3 = await treeFiddy.balanceOf(alice.address);
-    expect(res3.toString()).to.equal("21000000000000000000", 'incorrect number of treefiddies');
-  });
-
   it('tip creator, expect correct balances', async function() {
     const templateId = 0;
     const text = ["some text", "some more text"];
@@ -316,7 +275,7 @@ describe('MemeMinter (proxy)', function () {
     // expect correct number of treefiddies
     const res2 = await treeFiddy.balanceOf(alice.address);
     const res3 = await treeFiddy.balanceOf(bob.address);
-    expect(res2.toString()).to.equal("35000000000000000007", 'alice has incorrect number of treefiddies');
-    expect(res3.toString()).to.equal("34999999999999999993", 'bob has incorrect number of treefiddies');
+    expect(res2.toString()).to.equal("175000000000000000007", 'alice has incorrect number of treefiddies');
+    expect(res3.toString()).to.equal("174999999999999999993", 'bob has incorrect number of treefiddies');
   })
 });
