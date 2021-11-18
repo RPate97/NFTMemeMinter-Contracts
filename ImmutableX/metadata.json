@@ -1,0 +1,76 @@
+{
+    "metadata": [
+        {
+            "name": "name", // user defined name (not required)
+            "type": "text"
+        },
+        {
+            "name": "description", // memes description (not required)
+            "type": "text"
+        },
+        {
+            "name": "image", // memes asset image (not required)
+            "type": "text"
+        },
+        {
+            "name": "creator", // name of the memes creator
+            "type": "text"
+        },
+        {
+            "name": "dynasty", // name of the memes dynasty
+            "type": "text"
+        },
+        {
+            "name": "DNA",  // memes hash dna
+            "type": "text"
+        },
+        {
+            "name": "dankness", // score based dankness
+            "type": "discrete",
+            "filterable": true
+        },
+        {
+            "name": "score", // score = upvotes - downvotes
+            "type": "continuous",
+            "filterable": true
+        },
+        {
+            "name": "upvotes", // absolute upvotes
+            "type": "continuous",
+            "filterable": true
+        },
+        {
+            "name": "downvotes", // absolute downvotes
+            "type": "continuous",
+            "filterable": true
+        },
+        {
+            "name": "rarity", // rarity background based on elements used (silver, gold, platinum, blood diamond, emerald)
+            "type": "discrete",
+            "filterable": true
+        },
+        {
+            "name": "socialProof", // links to social proof of the memes value
+            "type": "text"
+        },
+        {
+            "name": "printNumber", // memes id, but also print sequence number
+            "type": "continuous",
+            "filterable": true
+        },
+        {
+            "name": "parent", // id of the memes parent
+            "type": "continuous",
+            "filterable": true
+        },
+        {
+            "name": "creationDate", // miliseconds since epoche when the meme was created
+            "type": "continuous",
+            "filterable": true
+        },
+        {
+            "name": "quantity", // quantity printed (probably always 1)
+            "type": "continuous"
+        }
+    ]
+}
