@@ -16,30 +16,34 @@ import "./@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "./ERC2981ContractWideRoyalties.sol";
 import "./ContentMixin.sol";
 import "./IMintable.sol";
-import "./utils/Minting.sol";
 
 contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, ContextMixin, RoyaltiesV2Impl, IMintable {
 
     // events
-    event MemeMinted(bytes32 memeHash, address owner, uint tokenId, string uri);
-    event MemeBurned(bytes32 memeHash, address owner, uint tokenId);
+    event MemeMinted(string memeHash, string creator, address owner, uint tokenId, string uri);
+    event MemeBurned(string memeHash, address owner, uint tokenId);
 
     address public imx;
     string private baseURI;
 
     // mapping: memeId -> memeHash
-    mapping (uint => bytes32) private memeToHash;
+    mapping (uint => string) private memeToHash;
     // mapping: hash -> memeId
-    mapping (bytes32 => uint) private hashToMeme;
+    mapping (string => uint) private hashToMeme;
     // mapping: memeId -> creator address
-    mapping (uint => address) private memeCreator;
+    mapping (uint => string) private memeCreator;
 
     // meme struct used for returning memes from function calls
     struct Meme {
-        bytes32 memeHash;
+        string memeHash;
         string uri;
         uint memeId;
-        address creator;
+        string creator;
+    }
+
+    modifier tokenExists(uint _memeId) {
+        require(_exists(_memeId), "meme does not exist");
+        _;
     }
 
     modifier onlyIMX() {
@@ -48,28 +52,29 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
     }
 
     // check if a meme is original
-    function isOriginalMeme(bytes32 _memeHash) public view returns (bool, uint) {
+    function isOriginalMeme(string memory _memeHash) public view returns (bool, uint) {
         uint memeId = hashToMeme[_memeHash];
         return (memeId == 0, memeId);
     }
 
     // getters
     // gets a tokenId with the template + text hash
-    function getMemeWithHash(bytes32 _memeHash) public view returns (Meme memory) {
+    function getMemeWithHash(string memory _memeHash) public view returns (Meme memory) {
         uint memeId = hashToMeme[_memeHash];
         return getMeme(memeId);
     }
 
     // gets a meme template + text hash with token id
-    function getMemeHash(uint _tokenId) internal view returns (bytes32) {
+    function getMemeHash(uint _tokenId) internal view returns (string memory) {
         return memeToHash[_tokenId];
     }
 
     // gets meme onchain metadata
     function getMeme(uint _memeId) public view returns (Meme memory) {
-        bytes32 memeHash = getMemeHash(_memeId);
+        require(_exists(_memeId), "meme does not exist");
+        string memory memeHash = getMemeHash(_memeId);
         string memory uri = tokenURI(_memeId);
-        address creator = memeCreator[_memeId];
+        string memory creator = memeCreator[_memeId];
         return Meme(memeHash, uri, _memeId, creator);
     }
 
@@ -99,15 +104,37 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
         bytes calldata mintingBlob
     ) external override onlyIMX {
         require(quantity == 1, "Mintable: invalid quantity");
-        (uint256 id, bytes32 _hash, address _creator) = Minting.split(mintingBlob);
-        _mintFor(user, id, _hash, _creator);
+
+        int256 index = indexOf(mintingBlob, ":", 0);
+        int256 indexTwo = indexOf(mintingBlob, ":", uint256(index) + 1);
+
+        require(index >= 0, "Separator must exist");
+
+        // Trim the { and } from the parameters
+        bytes memory tokenString = mintingBlob[1:uint256(index) - 1];
+        uint256 tokenID = toUint(tokenString);
+        bytes memory _hash = mintingBlob[uint256(index) + 2:uint256(indexTwo)];
+        bytes memory _creator = mintingBlob[uint256(indexTwo) + 1:mintingBlob.length - 1];
+
+        _mintFor(user, tokenID, string(_hash), string(_creator));
+    }
+
+    function toUint(bytes memory b) internal pure returns (uint256) {
+        uint256 result = 0;
+        for (uint256 i = 0; i < b.length; i++) {
+            uint256 val = uint256(uint8(b[i]));
+            if (val >= 48 && val <= 57) {
+                result = result * 10 + (val - 48);
+            }
+        }
+        return result;
     }
 
     function _mintFor(
         address user,
         uint256 id,
-        bytes32 _hash,
-        address _creator
+        string memory _hash,
+        string memory _creator
     ) internal {
         // set memeid to hash
         memeToHash[id] = _hash;
@@ -116,7 +143,7 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
         // assign creator
         memeCreator[id] = _creator;
         _safeMint(user, id);
-        emit MemeMinted(_hash, _creator, id, tokenURI(id));
+        emit MemeMinted(_hash, _creator, user, id, tokenURI(id));
     }
 
    /**
@@ -150,20 +177,19 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
     }
 
     function customInitialize(address _owner, address _imx, string calldata _uri) internal {
-        require(_owner != address(0), "Owner must not be empty");
         imx = _imx;
         baseURI = _uri;
         transferOwnership(_owner); 
-        _setRoyalties(_owner, 1000);
-        setRoyalties(0, payable(_owner), uint96(1000));
+        updateRoyalties(payable(_owner), uint96(1000));
     }
 
     function initialize(address _owner, address _imx, string calldata _uri) initializer public {
-        customInitialize(_owner, _imx, _uri);
+        require(_owner != address(0), "Owner must not be empty");
         __ERC721_init("DankMeme", "MEME");
         __Pausable_init();
         __Ownable_init();
         __ERC721Burnable_init();
+        customInitialize(_owner, _imx, _uri);
     }
 
     function setBaseTokenURI(string calldata _uri) public onlyOwner {
@@ -216,4 +242,34 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
         }
         return super.supportsInterface(interfaceId);
     }
+
+    function indexOf(
+        bytes memory _base,
+        string memory _value,
+        uint256 _offset
+    ) internal pure returns (int256) {
+        bytes memory _valueBytes = bytes(_value);
+
+        assert(_valueBytes.length == 1);
+
+        for (uint256 i = _offset; i < _base.length; i++) {
+            if (_base[i] == _valueBytes[0]) {
+                return int256(i);
+            }
+        }
+
+        return -1;
+    }
+
+    function toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
+        require(_bytes.length >= _start + 20, "toAddress_outOfBounds");
+        address tempAddress;
+
+        assembly {
+            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
+        }
+
+        return tempAddress;
+    }
+
 }

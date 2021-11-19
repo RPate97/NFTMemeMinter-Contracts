@@ -27,7 +27,7 @@ library Minting {
         returns (bytes32 _hash, address _creator) 
     {
         require(blueprint.length == 52, "Blueprint must be 52 bytes");
-        _hash = bytes32(blueprint[0:31]);
+        _hash = Bytes.toBytes32(Bytes.substring(blueprint, 0, 31));
         _creator = Bytes.bytesToAddress(blueprint[32:52]);
     }
 }
