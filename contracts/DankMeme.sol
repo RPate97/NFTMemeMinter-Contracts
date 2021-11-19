@@ -14,10 +14,9 @@ import "./@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "./@rarible/royalties/contracts/LibPart.sol";
 import "./@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "./ERC2981ContractWideRoyalties.sol";
-import "./ContentMixin.sol";
 import "./IMintable.sol";
 
-contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, ContextMixin, RoyaltiesV2Impl, IMintable {
+contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, RoyaltiesV2Impl, IMintable {
 
     // events
     event MemeMinted(string memeHash, string creator, address owner, uint tokenId, string uri);
@@ -260,16 +259,4 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
 
         return -1;
     }
-
-    function toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
-        require(_bytes.length >= _start + 20, "toAddress_outOfBounds");
-        address tempAddress;
-
-        assembly {
-            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
-        }
-
-        return tempAddress;
-    }
-
 }
