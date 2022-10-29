@@ -7,7 +7,7 @@
       "hash": "0x12da6db106c14aaa8ea925ba25cf1721ca1316943565ab12ee5eac2b8a675821",
       "type": 0,
       "accessList": null,
-      "blockHash": "0x9affffe46dcec69ef65cba0c5fbeead8c927e493c5307d446a21e10bf94d262d",
+      "blockHash": "0x3649b12f8a38a064d59ff8b2bf059ad17fb7a71cef54d19a7e5e7f215f3b7e2c",
       "blockNumber": 2,
       "transactionIndex": 0,
       "confirmations": 1,
@@ -56,13 +56,13 @@
       "kind": "transparent"
     },
     {
-      "address": "0xCfEB869F69431e42cdB54A4F4f105C19C080A601",
-      "txHash": "0xb1c5e0eafe50931294fb31f879045e75bd9df7b10e7a3814c137c59715392b02",
+      "address": "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550",
+      "txHash": "0x237e548d07b1a8caaa476c7719add794c21523f59b4f54854bb217ea9938bd2b",
       "kind": "transparent"
     },
     {
-      "address": "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550",
-      "txHash": "0x237e548d07b1a8caaa476c7719add794c21523f59b4f54854bb217ea9938bd2b",
+      "address": "0xCfEB869F69431e42cdB54A4F4f105C19C080A601",
+      "txHash": "0xa624ec2d01cb6793fca88d9aa6f95d17800aab43c32b4ef527db1620f4ae23b0",
       "kind": "transparent"
     }
   ],
@@ -459,9 +459,9 @@
         }
       }
     },
-    "75e0fefb61e6f8ef960d1aac04760120a0360c87ba16b1597810310a70c896f9": {
+    "edfeb00ed1dc45ae6e369f0c0a35a90a3eeb6a7ba49ecacebd4a89f807fb21b8": {
       "address": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab",
-      "txHash": "0xfb5bfef867ad814be396e17ede8e372dd2e54479026dc6fb8bcb667a576c9e34",
+      "txHash": "0xa12747b42832571c000680bd1ea494a17db6429f053ffe9e186a16b7b6299da9",
       "layout": {
         "storage": [
           {
@@ -561,18 +561,6 @@
             "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol:171"
           },
           {
-            "contract": "ERC721URIStorageUpgradeable",
-            "label": "_tokenURIs",
-            "type": "t_mapping(t_uint256,t_string_storage)",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol:23"
-          },
-          {
-            "contract": "ERC721URIStorageUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol:75"
-          },
-          {
             "contract": "PausableUpgradeable",
             "label": "_paused",
             "type": "t_bool",
@@ -617,147 +605,63 @@
           {
             "contract": "AbstractRoyalties",
             "label": "royalties",
-            "type": "t_mapping(t_uint256,t_array(t_struct(Part)3663_storage)dyn_storage)",
+            "type": "t_mapping(t_uint256,t_array(t_struct(Part)3792_storage)dyn_storage)",
             "src": "contracts/@rarible/royalties/contracts/impl/AbstractRoyalties.sol:5"
           },
           {
             "contract": "DankMinter",
-            "label": "_tokenIdCounter",
-            "type": "t_struct(Counter)2959_storage",
-            "src": "contracts/DankMinter.sol:23"
+            "label": "imx",
+            "type": "t_address",
+            "src": "contracts/DankMinter.sol:25"
           },
           {
             "contract": "DankMinter",
-            "label": "tipAddress",
-            "type": "t_address",
+            "label": "baseURI",
+            "type": "t_string_storage",
             "src": "contracts/DankMinter.sol:26"
           },
           {
             "contract": "DankMinter",
-            "label": "treeFiddyCoinAddress",
-            "type": "t_address",
-            "src": "contracts/DankMinter.sol:27"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "conversionRate",
-            "type": "t_uint256",
-            "src": "contracts/DankMinter.sol:28"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "tf",
-            "type": "t_contract(TreeFiddy)7276",
+            "label": "memeToHash",
+            "type": "t_mapping(t_uint256,t_string_storage)",
             "src": "contracts/DankMinter.sol:29"
           },
           {
             "contract": "DankMinter",
-            "label": "memeToHash",
-            "type": "t_mapping(t_uint256,t_bytes32)",
-            "src": "contracts/DankMinter.sol:46"
-          },
-          {
-            "contract": "DankMinter",
             "label": "hashToMeme",
-            "type": "t_mapping(t_bytes32,t_uint256)",
-            "src": "contracts/DankMinter.sol:48"
+            "type": "t_mapping(t_string_memory_ptr,t_uint256)",
+            "src": "contracts/DankMinter.sol:31"
           },
           {
             "contract": "DankMinter",
             "label": "memeCreator",
-            "type": "t_mapping(t_uint256,t_address)",
-            "src": "contracts/DankMinter.sol:51"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "memeScore",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "src": "contracts/DankMinter.sol:53"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "hasMinted",
-            "type": "t_mapping(t_address,t_bool)",
-            "src": "contracts/DankMinter.sol:56"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "hasVotedOnMeme",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_bool))",
-            "src": "contracts/DankMinter.sol:58"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "memeExperience",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "src": "contracts/DankMinter.sol:61"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "requiredMemeExperience",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "src": "contracts/DankMinter.sol:63"
-          },
-          {
-            "contract": "DankMinter",
-            "label": "memeDanknessTier",
-            "type": "t_mapping(t_uint256,t_uint256)",
-            "src": "contracts/DankMinter.sol:65"
+            "type": "t_mapping(t_uint256,t_string_storage)",
+            "src": "contracts/DankMinter.sol:33"
           }
         ],
         "types": {
-          "t_struct(Counter)2959_storage": {
-            "label": "struct CountersUpgradeable.Counter",
-            "members": [
-              {
-                "label": "_value",
-                "type": "t_uint256"
-              }
-            ]
+          "t_address": {
+            "label": "address"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)"
           },
           "t_uint256": {
             "label": "uint256"
           },
-          "t_address": {
-            "label": "address"
+          "t_mapping(t_string_memory_ptr,t_uint256)": {
+            "label": "mapping(string => uint256)"
           },
-          "t_contract(TreeFiddy)7276": {
-            "label": "contract TreeFiddy"
-          },
-          "t_mapping(t_uint256,t_bytes32)": {
-            "label": "mapping(uint256 => bytes32)"
-          },
-          "t_bytes32": {
-            "label": "bytes32"
-          },
-          "t_mapping(t_bytes32,t_uint256)": {
-            "label": "mapping(bytes32 => uint256)"
-          },
-          "t_mapping(t_uint256,t_address)": {
-            "label": "mapping(uint256 => address)"
-          },
-          "t_mapping(t_uint256,t_uint256)": {
-            "label": "mapping(uint256 => uint256)"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_bool))": {
-            "label": "mapping(address => mapping(uint256 => bool))"
-          },
-          "t_mapping(t_uint256,t_bool)": {
-            "label": "mapping(uint256 => bool)"
-          },
-          "t_mapping(t_uint256,t_array(t_struct(Part)3663_storage)dyn_storage)": {
+          "t_mapping(t_uint256,t_array(t_struct(Part)3792_storage)dyn_storage)": {
             "label": "mapping(uint256 => struct LibPart.Part[])"
           },
-          "t_array(t_struct(Part)3663_storage)dyn_storage": {
+          "t_array(t_struct(Part)3792_storage)dyn_storage": {
             "label": "struct LibPart.Part[]"
           },
-          "t_struct(Part)3663_storage": {
+          "t_struct(Part)3792_storage": {
             "label": "struct LibPart.Part",
             "members": [
               {
@@ -782,14 +686,14 @@
           "t_array(t_uint256)49_storage": {
             "label": "uint256[49]"
           },
-          "t_mapping(t_uint256,t_string_storage)": {
-            "label": "mapping(uint256 => string)"
-          },
-          "t_string_storage": {
-            "label": "string"
+          "t_bool": {
+            "label": "bool"
           },
           "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
             "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
           },
           "t_array(t_uint256)dyn_storage": {
             "label": "uint256[]"
@@ -797,11 +701,17 @@
           "t_array(t_uint256)46_storage": {
             "label": "uint256[46]"
           },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)"
+          },
           "t_mapping(t_address,t_uint256)": {
             "label": "mapping(address => uint256)"
           },
           "t_mapping(t_address,t_mapping(t_address,t_bool))": {
             "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
           },
           "t_array(t_uint256)44_storage": {
             "label": "uint256[44]"

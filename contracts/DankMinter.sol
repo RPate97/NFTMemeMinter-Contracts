@@ -14,10 +14,9 @@ import "./@rarible/royalties/contracts/impl/RoyaltiesV2Impl.sol";
 import "./@rarible/royalties/contracts/LibPart.sol";
 import "./@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "./ERC2981ContractWideRoyalties.sol";
-import "./ContentMixin.sol";
 import "./IMintable.sol";
 
-contract DankMemeV2 is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, ContextMixin, RoyaltiesV2Impl, IMintable {
+contract DankMinter is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, RoyaltiesV2Impl, IMintable {
 
     // events
     event MemeMinted(string memeHash, string creator, address owner, uint tokenId, string uri);
@@ -32,8 +31,6 @@ contract DankMemeV2 is Initializable, ERC721Upgradeable, ERC721EnumerableUpgrade
     mapping (string => uint) private hashToMeme;
     // mapping: memeId -> creator address
     mapping (uint => string) private memeCreator;
-
-    uint testUpgrade;
 
     // meme struct used for returning memes from function calls
     struct Meme {
@@ -182,7 +179,7 @@ contract DankMemeV2 is Initializable, ERC721Upgradeable, ERC721EnumerableUpgrade
         imx = _imx;
         baseURI = _uri;
         transferOwnership(_owner); 
-        setRoyalties(0, payable(_owner), uint96(1000));
+        updateRoyalties(payable(_owner), uint96(1000));
     }
 
     function initialize(address _owner, address _imx, string calldata _uri) initializer public {
@@ -262,16 +259,4 @@ contract DankMemeV2 is Initializable, ERC721Upgradeable, ERC721EnumerableUpgrade
 
         return -1;
     }
-
-    function toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
-        require(_bytes.length >= _start + 20, "toAddress_outOfBounds");
-        address tempAddress;
-
-        assembly {
-            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
-        }
-
-        return tempAddress;
-    }
-
 }

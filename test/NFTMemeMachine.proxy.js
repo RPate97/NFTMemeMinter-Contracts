@@ -28,14 +28,14 @@ function fromHex(str1) {
 // Start test block
 describe('DankMeme (proxy)', function () {
   beforeEach(async function () {
-    DankMeme = await ethers.getContractFactory("DankMeme");
+    let DankMeme = await ethers.getContractFactory("DankMinter");
     [deployer, alice, bob, james] = await ethers.getSigners();
     // address _owner, address _imx, string calldata _uri
     memeMachine = await upgrades.deployProxy(DankMeme, [deployer.address, deployer.address, 'https://dankminter.com/api/'], {initializer: 'initialize'});
   });
 
   it('Upgradability works', async () => {
-    const DankMemeV2 = await ethers.getContractFactory("DankMemeV2");
+    const DankMemeV2 = await ethers.getContractFactory("DankMinterV2");
     upgraded = await upgrades.upgradeProxy(memeMachine.address, DankMemeV2);
 
     // meme info
@@ -48,15 +48,18 @@ describe('DankMeme (proxy)', function () {
     for (var i = 0; i < text.length; i++) {
         textStr += text[i];
     }
-    const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
-    const hash = web3.utils.sha3(encoded, {encoding: 'hex'});
+    // const encoded = web3.eth.abi.encodeParameters(['uint256', 'string'], [templateId, textStr])
+    const hash = web3.utils.sha3("1R1L61fb369f36825cd041da078361fb36a236825cd041da0784EVERYONEMAKINGMEMESABOUTNFTSMEMAKINGNFTSOFMYMEMES", {encoding: 'hex'});
 
-    const blob = toHex(`{1}:{${hash}:alice}`);
+    console.log(hash);
+    const blob = toHex(`{1}:{${hash}:@pate}`);
+    console.log(blob);
 
-    await upgraded.mintFor(alice.address, 1, blob);
+    await upgraded.mintFor("0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0", 1, blob);
 
     // get info
     const res = await upgraded.getMeme(1);
+    console.log(res);
     const memeHash = res[0];
     const memeUri = res[1];
     const memeId = res[2];
@@ -65,13 +68,13 @@ describe('DankMeme (proxy)', function () {
     expect(memeHash).to.equal(hash, "meme hash is not correct");
     expect(memeId).to.equal(1, "memeId is not correct");
     expect(memeUri).to.equal(URI, "uri is not correct");
-    expect(creator).to.equal("alice", "creator name is not correct");
+    expect(creator).to.equal("@pate", "creator name is not correct");
     // verify memeId returned with hash
     const res2 = await upgraded.getMemeWithHash(hash);
     expect(res2[0]).to.equal(hash, "meme hash is not correct");
     expect(res2[1]).to.equal(URI, "uri is not correct");
     expect(res2[2]).to.equal(1, "memeId is not correct");
-    expect(res2[3]).to.equal("alice", "creator name is not correct");
+    expect(res2[3]).to.equal("@pate", "creator name is not correct");
   });
  
   it('Mint a token, expect correct URI and correct hash, expect memeId to be returned using hash', async function () {

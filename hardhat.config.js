@@ -4,8 +4,10 @@ require('@openzeppelin/hardhat-upgrades');
 require("solidity-coverage");
 require("hardhat-gas-reporter");
 require('hardhat-abi-exporter');
+require("@nomiclabs/hardhat-etherscan");
 require('dotenv').config();
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -29,7 +31,7 @@ module.exports = {
   networks: {
     hardhat: {
     },
-    development: {
+    dev: {
       url: "http://127.0.0.1:8545",
     },
     matic: {
@@ -40,6 +42,10 @@ module.exports = {
       gas: 8000000,
       gasPrice: 8000000, 
       timeout: 20000
+    },
+    ropsten: {
+      url: ALCHEMY_API_KEY,
+      accounts: [PRIVATE_KEY]
     }
   },
   solidity: {
@@ -71,5 +77,10 @@ module.exports = {
     flat: true,
     only: [],
     spacing: 2
-  }
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: "9CZ82H5T1SA3JEUSCUW1CW8VMNDD19QXSE",
+  },
 }

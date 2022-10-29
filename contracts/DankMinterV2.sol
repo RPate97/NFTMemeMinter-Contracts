@@ -16,7 +16,7 @@ import "./@rarible/royalties/contracts/LibRoyaltiesV2.sol";
 import "./ERC2981ContractWideRoyalties.sol";
 import "./IMintable.sol";
 
-contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, RoyaltiesV2Impl, IMintable {
+contract DankMinterV2 is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeable, PausableUpgradeable, OwnableUpgradeable, ERC721BurnableUpgradeable, ERC2981ContractWideRoyalties, RoyaltiesV2Impl, IMintable {
 
     // events
     event MemeMinted(string memeHash, string creator, address owner, uint tokenId, string uri);
@@ -31,6 +31,8 @@ contract DankMeme is Initializable, ERC721Upgradeable, ERC721EnumerableUpgradeab
     mapping (string => uint) private hashToMeme;
     // mapping: memeId -> creator address
     mapping (uint => string) private memeCreator;
+
+    uint testUpgrade;
 
     // meme struct used for returning memes from function calls
     struct Meme {

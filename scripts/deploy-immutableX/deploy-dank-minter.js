@@ -13,9 +13,9 @@ async function main() {
     console.log('Account Balance: ', (await deployer.getBalance()).toString());
 
     // Use any logic you want to determine these values
-    const owner = process.env.CONTRACT_OWNER_ADDRESS;
-    const name = process.env.CONTRACT_NAME;
-    const symbol = process.env.CONTRACT_SYMBOL;
+    const owner = deployer.address;
+    const name = "DankMinter";
+    const symbol = "MEME";
 
     await deploySmartContract(owner, name, symbol, hardhat.network.name);
 }
@@ -32,10 +32,11 @@ async function main() {
  */
 async function deploySmartContract(owner, name, symbol, network) {
     // Hard coded to compile and deploy the Asset.sol smart contract.
-    const SmartContract = await ethers.getContractFactory('DankMeme');
+    const SmartContract = await ethers.getContractFactory(name);
     const imxAddress = getIMXAddress(network);
-    const smartContract = await SmartContract.deploy(owner, name, symbol, imxAddress);
-  
+    // const smartContract = await SmartContract.deploy(owner, name, symbol, imxAddress);
+    const smartContract = await upgrades.deployProxy(SmartContract, [owner, imxAddress, 'https://dankminter.com/api/'], {initializer: 'initialize'});
+
     console.log('Deployed Contract Address:', smartContract.address);
 }
 
@@ -50,6 +51,8 @@ function getIMXAddress(network) {
             return '0x4527be8f31e2ebfbef4fcaddb5a17447b27d2aef';
         case 'mainnet':
             return '0x5FDCCA53617f4d2b9134B29090C87D01058e27e9';
+        case 'dev':
+            return '0x4527be8f31e2ebfbef4fcaddb5a17447b27d2aef';
     }
     throw Error('Invalid network selected');
 }
